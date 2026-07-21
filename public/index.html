@@ -138,11 +138,12 @@ function openBtns(noteRel){
   return `${l?`<a href="${l}">Open in Obsidian</a>`:''}<button data-path="${esc(noteRel)}">Copy path</button>`;
 }
 function hitCard(h, qterms){
+  const links = (h.inbound||h.outlinks) ? `<span class="tag" title="backlinks in · links out">↖ ${h.inbound||0} · ${h.outlinks||0} ↗</span>` : '';
   return `<div class="card"><div class="hit">
     <div class="h-top"><div class="h-title">${esc(h.title)}<span class="crumb">${crumb(h)}</span></div>
-      <div class="h-meta">score ${h.score} · ${h.mtime}</div></div>
+      <div class="h-meta">${h.folder?esc(h.folder)+' · ':''}score ${h.score} · ${h.mtime}</div></div>
     <div class="snip">${highlight(h.snippet, qterms)}</div>
-    <div class="h-foot">${openBtns(h.note)}${(h.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div>
+    <div class="h-foot">${openBtns(h.note)}${links}${(h.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div>
   </div></div>`;
 }
 
