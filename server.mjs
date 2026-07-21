@@ -3,6 +3,7 @@
 // never leaves the machine. AI answers are off until you set MODEL_API_KEY.
 
 import { createServer } from 'node:http';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { readFileSync, existsSync, watch } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,7 @@ import { groundedAnswer } from './lib/ground.mjs';
 import { modelEnabled, embeddingsEnabled } from './lib/model.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
+import { integrityReport } from './lib/integrity.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
@@ -69,6 +71,36 @@ async function semFor(q) {
   return INDEX?.embedded ? semanticScores(INDEX, await embedQuery(q)) : null;
 }
 
+const sha256 = (o) => createHash('sha256').update(typeof o === 'string' ? o : JSON.stringify(o)).digest('hex');
+
+// The compliance artifact: a hashed record of an answer (or refusal) that ties it
+// to the exact sources considered, with a content hash of each cited passage so
+// you can prove WHAT the source said at answer time. Refusals are receipted too —
+// a record that the system correctly declined rather than guessed.
+function answerReceipt({ q, r, ans }) {
+  const refused = !ans || ans.refused;
+  const citations = (ans?.citations || []).map((c) => {
+    const hit = r.hits.find((h) => h.note === c.note && h.heading === c.heading) || r.hits.find((h) => h.note === c.note);
+    const text = hit ? INDEX.chunks[hit.id]?.text || '' : '';
+    return { note: c.note, heading: c.heading || null, content_sha256: sha256(text), source_mtime: hit?.mtime || null };
+  });
+  const receipt = {
+    tool: 'cairn',
+    kind: 'answer',
+    verdict: refused ? 'REFUSED_UNGROUNDED' : 'GROUNDED',
+    question: q,
+    answer: ans?.answer ?? null,
+    model: ans?.model ?? null,
+    confidence: r.confidence,
+    sources: citations,
+    retrieved_considered: r.hits.slice(0, 8).map((h) => ({ note: h.note, heading: h.heading || null, score: h.score })),
+    vault: VAULT_NAME,
+    index_built_at: INDEX?.builtAt || null,
+    at: new Date().toISOString(),
+  };
+  return { ...receipt, receipt_sha256: sha256(receipt) };
+}
+
 // Debounced auto-reindex when the vault changes (the embedding cache makes only
 // new/changed chunks re-embed, so this is cheap).
 let reindexTimer = null;
@@ -116,7 +148,7 @@ const server = createServer(async (req, res) => {
       const r = search(INDEX, q, { k: 10, semScores: sem });
       // Nothing to ground on → refuse up front, never call the model to fill a gap.
       if (r.weak || !r.hits.length) {
-        return send(res, 200, { q, mode: 'refused', refused: true, reason: 'Nothing in your vault matched that with enough confidence.', hits: r.hits, confidence: r.confidence });
+        return send(res, 200, { q, mode: 'refused', refused: true, reason: 'Nothing in your vault matched that with enough confidence.', hits: r.hits, confidence: r.confidence, receipt: answerReceipt({ q, r, ans: null }) });
       }
       if (!modelEnabled()) {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, weak: r.weak });
@@ -124,7 +156,7 @@ const server = createServer(async (req, res) => {
       try {
         const contexts = contextsFrom(r.hits);
         const ans = await groundedAnswer({ q, query: q, contexts });
-        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, confidence: r.confidence });
+        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, confidence: r.confidence, receipt: answerReceipt({ q, r, ans }) });
       } catch (e) {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e) });
       }
@@ -134,6 +166,12 @@ const server = createServer(async (req, res) => {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const body = await readBody(req).catch(() => ({}));
       return send(res, 200, audit(INDEX, { staleDays: body.stale_days || 180 }));
+    }
+
+    if (req.method === 'POST' && req.url === '/api/integrity') {
+      if (!INDEX) return send(res, 503, { error: 'index not ready' });
+      const body = await readBody(req).catch(() => ({}));
+      return send(res, 200, integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: body.stale_days || 180 }));
     }
 
     if (req.method === 'POST' && req.url === '/api/contradictions') {

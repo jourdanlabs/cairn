@@ -8,6 +8,7 @@ CAIRN is a local, grounded search + audit layer over an [Obsidian](https://obsid
 - **Hallucinations** → every result is a *real passage from a real note*, deep-linked back to it. The optional **Ask** mode is locked to your notes: it cites every claim, and if the answer isn't there it says **"Not in your vault."** — it never guesses. A confidence gate refuses weak matches *before* it ever calls a model.
 - **Overlaps / contradictions** → embeddings find note pairs about the *same thing*; the model then adjudicates whether they **contradict**, **duplicate**, or merely **relate** — catching redundancy and conflicting decisions.
 - **The vault itself rotting** → a one-click **audit** finds orphans, broken `[[links]]`, stale notes, duplicate titles, stubs, and untagged notes.
+- **Prove it (for regulated environments)** → every answer (or refusal) emits a hashed **receipt** tying it to the exact sources, each content-hashed, with a timestamp. A one-click **Integrity Report** scores the whole base (0–100 + grade), rolls up every finding + contradiction, and exports as a signed JSON artifact. Provenance a risk team — or a regulator — can check.
 
 Zero runtime dependencies. Runs fully local — **your vault never leaves the machine.** Grounded search needs no network and no API key at all.
 

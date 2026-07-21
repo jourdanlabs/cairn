@@ -124,8 +124,9 @@
     </div>
     <span class="ctrl-note" id="modenote">Ranked passages from your notes — no generation, no hallucination.</span>
     <div style="margin-left:auto; display:flex; gap:8px">
+      <button class="auditbtn" id="integritybtn" style="border-color:color-mix(in srgb,var(--accent) 45%,var(--line2)); color:var(--ink)">Integrity Report</button>
       <button class="auditbtn" id="overlapbtn">Overlaps</button>
-      <button class="auditbtn" id="auditbtn">Audit vault</button>
+      <button class="auditbtn" id="auditbtn">Audit</button>
     </div>
   </div>
 
@@ -216,8 +217,9 @@ function render(d){
   if(d.mode==='refused' || d.refused){
     const reason = d.reason || (d.answer||'').trim();
     out.innerHTML = `<div class="card refused"><div class="r-title">Not in your vault</div>
-      <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p></div>`;
+      <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p>${receiptBar(d.receipt)}</div>`;
     if(d.hits && d.hits.length) out.innerHTML += `<div class="muted" style="font-size:12px;margin:4px 2px">Closest passages:</div>` + d.hits.slice(0,3).map(h=>hitCard(h,d.qterms)).join('');
+    wireReceipt();
     return;
   }
   // grounded answer
@@ -227,9 +229,9 @@ function render(d){
     let body = esc(d.answer).replace(/\[(\d+)\]/g,'<sup><a href="#cite-$1">[$1]</a></sup>');
     out.innerHTML = `<div class="card answer">
       <div class="ahead"><span class="badge ok">Grounded answer</span><span class="badge">${d.grounded?'cited':'ungrounded'}</span><span class="badge">${esc(d.model||'')}</span></div>
-      <div class="abody">${body}</div>${cites?`<div class="cites">${cites}</div>`:''}</div>`;
+      <div class="abody">${body}</div>${cites?`<div class="cites">${cites}</div>`:''}${receiptBar(d.receipt)}</div>`;
     if(d.hits) out.innerHTML += `<div class="muted" style="font-size:12px;margin:6px 2px">Sources:</div>` + d.hits.slice(0,6).map(h=>hitCard(h,d.qterms)).join('');
-    wirePaths();
+    wirePaths(); wireReceipt();
     return;
   }
   // passages
@@ -240,6 +242,15 @@ function render(d){
 function wirePaths(){
   document.querySelectorAll('[data-path]').forEach(b=>b.onclick=()=>{ navigator.clipboard.writeText(b.dataset.path); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy path',1200); });
 }
+let lastReceipt=null;
+function downloadJSON(name,obj){ const b=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
+function receiptBar(rc){ if(!rc) return ''; lastReceipt=rc;
+  return `<div class="cites" style="border-top:1px solid var(--line);padding-top:12px;margin-top:4px;align-items:center">
+    <span class="badge ${rc.verdict==='GROUNDED'?'ok':'bad'}">${esc(rc.verdict)}</span>
+    <span class="cite" style="cursor:default">receipt ${esc(rc.receipt_sha256.slice(0,20))}…</span>
+    <button class="cite" id="dl-receipt">Download receipt</button></div>`;
+}
+function wireReceipt(){ const b=document.getElementById('dl-receipt'); if(b&&lastReceipt) b.onclick=()=>downloadJSON('cairn-receipt-'+lastReceipt.receipt_sha256.slice(0,8)+'.json', lastReceipt); }
 
 // --- audit ---
 $('#auditbtn').onclick = async () => {
@@ -293,6 +304,31 @@ async function loadOverlaps(adjudicate){
   }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
 }
 $('#overlapbtn').onclick = () => loadOverlaps(false);
+
+// --- integrity report ---
+$('#integritybtn').onclick = async () => {
+  const out = $('#out'); out.innerHTML = `<div class="empty">Computing knowledge integrity report…</div>`;
+  try{
+    const d = await (await fetch('/api/integrity',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
+    if(d.error) throw new Error(d.error);
+    const col = d.integrity_score>=80?'var(--ok)':d.integrity_score>=60?'var(--warn)':'var(--bad)';
+    const findings = d.findings.map(f=>`<details class="finding"><summary><span><span class="f-label">${esc(f.label)}</span><span class="f-hint">${esc(f.hint)}</span></span><span class="count ${f.count?'some':'zero'}">${f.count}</span></summary>${f.count?`<div class="items">${f.items.slice(0,40).map(it=>{const note=it.note||it.from||(it.notes&&it.notes[0])||'';const label=it.link?`${esc(it.from)} → [[${esc(it.link)}]]`:it.title?`${esc(it.title)} — ${esc(note)}`:esc(note);const l=obsidianLink(note);return l?`<a href="${l}">${label}</a>`:`<a>${label}</a>`;}).join('')}</div>`:''}</details>`).join('');
+    const c = d.contradictions;
+    const contras = c.available
+      ? `<details class="finding"${c.candidate_count?' open':''}><summary><span><span class="f-label">Contradiction candidates</span><span class="f-hint">Same-topic note pairs — use Overlaps to classify</span></span><span class="count ${c.candidate_count?'some':'zero'}">${c.candidate_count}</span></summary>${c.candidate_count?`<div class="items">${c.candidates.slice(0,20).map(p=>`<a class="muted">~${p.similarity} · ${esc(p.a.note)} ↔ ${esc(p.b.note)}</a>`).join('')}</div>`:''}</details>`
+      : `<div class="finding" style="padding:12px 18px"><span class="f-hint">${esc(c.note)}</span></div>`;
+    out.innerHTML = `<div class="card"><div class="audit-head">
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span class="badge">Knowledge Integrity Report</span>
+          <span style="font:800 30px/1 var(--mono);color:${col}">${d.integrity_score}<span style="font-size:15px;color:var(--muted)">/100</span></span>
+          <span class="rel" style="color:${col};border:1px solid ${col}">Grade ${esc(d.grade)}</span></div>
+        <button class="auditbtn" id="dl-report">Download report</button></div>
+      <div class="audit-grid">${findings}${contras}</div>
+      <div style="padding:12px 18px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <span class="cite" style="cursor:default">report_sha256 ${esc(d.report_sha256.slice(0,24))}…</span>
+        <span class="muted" style="font:500 11px var(--mono)">${d.totals.notes} notes · ${esc((d.generated_at||'').slice(0,19))}Z</span></div></div>`;
+    const dl=document.getElementById('dl-report'); if(dl) dl.onclick=()=>downloadJSON('cairn-integrity-'+d.report_sha256.slice(0,8)+'.json', d);
+  }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
+};
 </script>
 </body>
 </html>
