@@ -79,7 +79,9 @@ async function main() {
     console.log('Falling back to lexical / audit-only run (no contradiction detection).');
   }
 
-  const report = integrityReport(index, { vaultName: 'policy-corpus' });
+  // Adjudicate so the score reflects CONFIRMED contradictions (a local model
+  // classifies each candidate), not mere topical overlap between policies.
+  const report = await integrityReport(index, { vaultName: 'policy-corpus', adjudicate: embedOk });
 
   console.log('─'.repeat(70));
   console.log(`Integrity score : ${report.integrity_score}  (grade ${report.grade})`);

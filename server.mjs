@@ -177,7 +177,8 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/api/integrity') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const body = await readBody(req).catch(() => ({}));
-      return send(res, 200, integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: body.stale_days || 180 }));
+      const rep = await integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: body.stale_days || 180, adjudicate: Boolean(body.adjudicate), adjudicateLimit: body.limit || 8 });
+      return send(res, 200, rep);
     }
 
     if (req.method === 'POST' && req.url === '/api/contradictions') {

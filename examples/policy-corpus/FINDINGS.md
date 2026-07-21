@@ -16,17 +16,21 @@ node examples/run-demo.mjs
 
 | Metric | Value |
 | --- | --- |
-| Integrity score | **63 / 100** |
-| Grade | **D** |
+| Integrity score | **73 / 100** |
+| Grade | **C** |
 | Notes indexed | 11 |
 | Chunks indexed | 46 |
 | Embeddings | on (`nomic-embed-text`, local Ollama), `embedded=true` |
 | Controlled coverage | 9 / 11 (authoritative) |
 | Contradiction candidates | 9 (threshold 0.82) |
-| Controlled overlaps (review first) | 9 |
+| **Confirmed** contradictions (adjudicated) | **1** |
 
-Score penalties breakdown: contradictions −22, broken links −7, stale −4,
-orphans −4, duplicate titles −0 → **100 − 37 = 63**.
+Score penalties breakdown (adjudicated): contradictions −15 (1 confirmed,
+controlled↔controlled), broken links −6, stale −4, orphans −2 → **100 − 27 = 73**.
+
+> The score weights **confirmed** contradictions (a local model classifies each
+> candidate) and deterministic structural defects — not mere topical overlap. See
+> [`../REMEDIATION.md`](../REMEDIATION.md) for the same library remediated to **100 / A**.
 
 The library reads like a real one — 9 cross-linked controlled policies (access
 control, incident response, vendor risk, AML/KYC, change management, data
