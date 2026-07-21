@@ -35,6 +35,8 @@ const PORT = process.env.PORT || 4600;
 const VAULT_DIR = process.env.VAULT_DIR ? process.env.VAULT_DIR.replace(/^~/, process.env.HOME || '~') : '';
 const VAULT_NAME = process.env.OBSIDIAN_VAULT_NAME || (VAULT_DIR ? basename(VAULT_DIR) : '');
 const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+// Compliance: top-level folders whose notes are "controlled" (authoritative).
+const CONTROLLED_DIRS = (process.env.CONTROLLED_DIRS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const WATCH = (process.env.WATCH || 'on').toLowerCase() !== 'off';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
@@ -82,8 +84,10 @@ function answerReceipt({ q, r, ans }) {
   const citations = (ans?.citations || []).map((c) => {
     const hit = r.hits.find((h) => h.note === c.note && h.heading === c.heading) || r.hits.find((h) => h.note === c.note);
     const text = hit ? INDEX.chunks[hit.id]?.text || '' : '';
-    return { note: c.note, heading: c.heading || null, content_sha256: sha256(text), source_mtime: hit?.mtime || null };
+    return { note: c.note, heading: c.heading || null, content_sha256: sha256(text), source_mtime: hit?.mtime || null, controlled: Boolean(INDEX?.byRel.get(c.note)?.controlled) };
   });
+  // Grounding on a non-controlled (non-authoritative) source is a compliance flag.
+  const allControlled = citations.length > 0 && citations.every((c) => c.controlled);
   const receipt = {
     tool: 'cairn',
     kind: 'answer',
@@ -93,6 +97,8 @@ function answerReceipt({ q, r, ans }) {
     model: ans?.model ?? null,
     confidence: r.confidence,
     sources: citations,
+    all_sources_controlled: allControlled,
+    uncontrolled_source_warning: !refused && citations.some((c) => !c.controlled),
     retrieved_considered: r.hits.slice(0, 8).map((h) => ({ note: h.note, heading: h.heading || null, score: h.score })),
     vault: VAULT_NAME,
     index_built_at: INDEX?.builtAt || null,
@@ -108,7 +114,7 @@ function scheduleReindex() {
   clearTimeout(reindexTimer);
   reindexTimer = setTimeout(async () => {
     try {
-      const idx = await buildIndex(VAULT_DIR, { exts: EXTS });
+      const idx = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
       if (embeddingsEnabled()) await embedIndex(idx).catch(() => {});
       INDEX = idx;
       console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks${INDEX.embedded ? ' (embedded)' : ''}`);
@@ -188,7 +194,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/api/reindex') {
       if (!VAULT_DIR) return send(res, 400, { error: 'VAULT_DIR not set' });
-      INDEX = await buildIndex(VAULT_DIR, { exts: EXTS });
+      INDEX = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
       if (embeddingsEnabled()) await embedIndex(INDEX).catch(() => {});
       return send(res, 200, { ok: true, notes: INDEX.notes.length, chunks: INDEX.N, embedded: Boolean(INDEX.embedded) });
     }
@@ -207,7 +213,7 @@ async function start() {
     console.error(`\n  VAULT_DIR does not exist: ${VAULT_DIR}\n  Fix it in .env, then re-run.\n`);
   } else {
     process.stdout.write(`Indexing vault: ${VAULT_DIR} … `);
-    INDEX = await buildIndex(VAULT_DIR, { exts: EXTS });
+    INDEX = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
     console.log(`${INDEX.notes.length} notes · ${INDEX.N} chunks`);
     if (embeddingsEnabled()) {
       process.stdout.write('Embedding (semantic search) … ');
