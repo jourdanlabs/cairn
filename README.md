@@ -4,8 +4,9 @@
 
 CAIRN is a local, grounded search + audit layer over an [Obsidian](https://obsidian.md) vault. It fixes the three things that make a big second-brain hard to live in:
 
-- **Can't find it / can't remember where you put it** → semantic-ish retrieval (BM25 ranked, boosted by Obsidian's own structure: titles, headings, tags, links). Ask by meaning; location stops mattering.
-- **Hallucinations** → every result is a *real passage from a real note*, deep-linked back to it. The optional AI "Ask" mode is locked to your notes: it cites every claim, and if the answer isn't there it says **"Not in your vault."** — it never guesses.
+- **Can't find it / can't remember where you put it** → retrieval that ranks by meaning: BM25 boosted by Obsidian's own structure (titles, headings, tags, link-authority), and — with a local embedding model — **hybrid** BM25 + semantic so synonyms surface too. Location stops mattering.
+- **Hallucinations** → every result is a *real passage from a real note*, deep-linked back to it. The optional **Ask** mode is locked to your notes: it cites every claim, and if the answer isn't there it says **"Not in your vault."** — it never guesses. A confidence gate refuses weak matches *before* it ever calls a model.
+- **Overlaps / contradictions** → embeddings find note pairs about the *same thing*; the model then adjudicates whether they **contradict**, **duplicate**, or merely **relate** — catching redundancy and conflicting decisions.
 - **The vault itself rotting** → a one-click **audit** finds orphans, broken `[[links]]`, stale notes, duplicate titles, stubs, and untagged notes.
 
 Zero runtime dependencies. Runs fully local — **your vault never leaves the machine.** Grounded search needs no network and no API key at all.
@@ -28,15 +29,24 @@ Requires **Node 18+**. No `npm install`, no build step.
 VAULT_DIR=~/Documents/MyVault
 ```
 
-### Optional — AI "Ask" answers
+### Optional — turn on the local model (Ask · semantic search · contradictions)
 
-Set an OpenAI-compatible endpoint and CAIRN's **Ask** mode will synthesize a grounded, cited answer (or refuse):
+Point CAIRN at any OpenAI-compatible endpoint. **Recommended: a local [Ollama](https://ollama.com)** — everything (chat + embeddings) then runs on your machine and nothing leaves it. No API key needed for a local endpoint.
+
 ```bash
-MODEL_BASE_URL=https://api.openai.com/v1   # or your internal/local gateway
-MODEL_API_KEY=…
-MODEL_NAME=gpt-4o-mini
+ollama pull nomic-embed-text   # embeddings
+ollama pull qwen3:4b           # or any chat model you like
 ```
-Without it, **Search** mode still returns ranked passages — fully useful, zero network.
+```bash
+# .env
+MODEL_BASE_URL=http://localhost:11434/v1
+MODEL_NAME=qwen3:4b
+MODEL_EMBED=nomic-embed-text
+EMBEDDINGS=on
+```
+That enables: **hybrid** semantic search, **Ask** (grounded cited answers), and **Overlaps** (contradiction/duplicate detection). Chunks are embedded once and cached to `.cache/`, so restarts are instant.
+
+Prefer a hosted model? Set `MODEL_BASE_URL`/`MODEL_API_KEY` to OpenAI or your gateway instead. Without any model, **Search** and **Audit** still work fully — ranked passages, zero network.
 
 ---
 

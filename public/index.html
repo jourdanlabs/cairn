@@ -39,7 +39,21 @@
   .seg button { font:600 12px var(--sans); border:0; background:transparent; color:var(--muted); padding:7px 13px; border-radius:6px; cursor:pointer; }
   .seg button[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); }
   .ctrl-note { font:500 11px var(--mono); color:var(--muted); }
-  .auditbtn { margin-left:auto; font:600 11px var(--mono); letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--line2); background:transparent; color:var(--muted); padding:8px 12px; border-radius:7px; cursor:pointer; }
+  .auditbtn { font:600 11px var(--mono); letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--line2); background:transparent; color:var(--muted); padding:8px 12px; border-radius:7px; cursor:pointer; }
+  .pair { padding:13px 18px; }
+  .pair .p-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .pair .sim { font:700 12px var(--mono); color:var(--accent); }
+  .rel { font:700 10px var(--mono); text-transform:uppercase; padding:3px 8px; border-radius:5px; letter-spacing:.05em; }
+  .rel.contradict { color:var(--bad); background:color-mix(in srgb,var(--bad) 14%,transparent); }
+  .rel.duplicate { color:var(--warn); background:color-mix(in srgb,var(--warn) 14%,transparent); }
+  .rel.related, .rel.candidate, .rel.unrelated, .rel.unknown { color:var(--muted); background:var(--code); }
+  .pair .why { font-size:12.5px; color:var(--muted); margin:2px 0 9px; }
+  .pair .sides { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:640px){ .pair .sides { grid-template-columns:1fr; } }
+  .pair .side { border:1px solid var(--line); border-radius:8px; padding:9px 11px; }
+  .pair .side a { font:600 11px var(--mono); color:var(--ink); text-decoration:none; }
+  .pair .side a:hover { color:var(--accent); }
+  .pair .side .s-snip { font-size:12px; color:var(--muted); margin-top:5px; line-height:1.5; }
   .auditbtn:hover { color:var(--ink); border-color:var(--accent); }
 
   #out { margin-top:22px; display:flex; flex-direction:column; gap:12px; }
@@ -109,7 +123,10 @@
       <button id="m-ask" aria-pressed="false">Ask</button>
     </div>
     <span class="ctrl-note" id="modenote">Ranked passages from your notes — no generation, no hallucination.</span>
-    <button class="auditbtn" id="auditbtn">Audit vault</button>
+    <div style="margin-left:auto; display:flex; gap:8px">
+      <button class="auditbtn" id="overlapbtn">Overlaps</button>
+      <button class="auditbtn" id="auditbtn">Audit vault</button>
+    </div>
   </div>
 
   <section id="out"></section>
@@ -170,7 +187,8 @@ fetch('/api/status').then(r=>r.json()).then(s=>{
   const p = $('#status');
   if(!s.ready){ p.textContent='no vault — set VAULT_DIR'; p.className='pill bad'; }
   else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; }
-  $('#foot-ai').textContent = s.ai ? 'AI answers on' : 'grounded search (set MODEL_API_KEY for AI answers)';
+  state.embedded = s.embedded;
+  $('#foot-ai').textContent = `${s.search_mode||'lexical'} · Ask ${s.ai?'on':'off'}`;
   setMode(state.mode);
 }).catch(()=>{ $('#status').textContent='server error'; });
 
@@ -247,6 +265,34 @@ $('#auditbtn').onclick = async () => {
       <div class="audit-grid">${rows}</div></div>`;
   }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
 };
+
+// --- overlaps / contradictions ---
+function pairCard(p){
+  const rel = p.relation || 'candidate';
+  const la = obsidianLink(p.a.note), lb = obsidianLink(p.b.note);
+  return `<div class="card"><div class="pair">
+    <div class="p-top"><span class="sim">~${p.similarity}</span><span class="rel ${esc(rel)}">${esc(rel)}</span></div>
+    ${p.why?`<div class="why">${esc(p.why)}</div>`:''}
+    <div class="sides">
+      <div class="side"><a ${la?`href="${la}"`:''}>${esc(p.a.note)}${p.a.heading?' › '+esc(p.a.heading):''}</a><div class="s-snip">${esc(p.a.snippet)}</div></div>
+      <div class="side"><a ${lb?`href="${lb}"`:''}>${esc(p.b.note)}${p.b.heading?' › '+esc(p.b.heading):''}</a><div class="s-snip">${esc(p.b.snippet)}</div></div>
+    </div></div></div>`;
+}
+async function loadOverlaps(adjudicate){
+  const out = $('#out');
+  out.innerHTML = `<div class="empty">${adjudicate?'Classifying pairs with the local model (this is slow — a few seconds each)…':'Finding overlapping notes…'}</div>`;
+  try{
+    const d = await (await fetch('/api/contradictions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({threshold:0.8,max:12,adjudicate:!!adjudicate,limit:5})})).json();
+    if(d.available===false){ out.innerHTML = `<div class="card refused"><div class="r-title">Overlap detection needs embeddings</div><p>${esc(d.reason||'')}</p></div>`; return; }
+    if(!d.pairs.length){ out.innerHTML = `<div class="empty">No strongly-overlapping note pairs found. Your vault is tidy.</div>`; return; }
+    const head = `<div class="card"><div class="audit-head"><span class="badge">Overlaps · same-topic note pairs</span>
+      ${d.adjudicated?`<span class="muted" style="font:500 12px var(--mono)">classified by model</span>`
+        :`<button class="auditbtn" id="adjbtn">Ask model to classify</button>`}</div></div>`;
+    out.innerHTML = head + d.pairs.map(pairCard).join('');
+    const adj = document.getElementById('adjbtn'); if(adj) adj.onclick=()=>loadOverlaps(true);
+  }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
+}
+$('#overlapbtn').onclick = () => loadOverlaps(false);
 </script>
 </body>
 </html>

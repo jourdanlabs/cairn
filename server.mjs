@@ -11,7 +11,10 @@ import { dirname, join, extname, normalize, basename } from 'node:path';
 import { buildIndex } from './lib/index.mjs';
 import { search } from './lib/search.mjs';
 import { audit } from './lib/audit.mjs';
-import { groundedAnswer, answerConfigured } from './lib/ground.mjs';
+import { groundedAnswer } from './lib/ground.mjs';
+import { modelEnabled, embeddingsEnabled } from './lib/model.mjs';
+import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
+import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 
@@ -59,6 +62,11 @@ function contextsFrom(hits, kctx = 6) {
   });
 }
 
+// Semantic scores for a query when the index is embedded (enables hybrid search).
+async function semFor(q) {
+  return INDEX?.embedded ? semanticScores(INDEX, await embedQuery(q)) : null;
+}
+
 const server = createServer(async (req, res) => {
   try {
     if (req.method === 'GET' && req.url === '/api/status') {
@@ -68,7 +76,9 @@ const server = createServer(async (req, res) => {
         notes: INDEX?.notes.length || 0,
         chunks: INDEX?.N || 0,
         built_at: INDEX?.builtAt || null,
-        ai: answerConfigured(),
+        ai: modelEnabled(),
+        embedded: Boolean(INDEX?.embedded),
+        search_mode: INDEX?.embedded ? 'hybrid (BM25 + semantic)' : 'lexical (BM25)',
         ready: Boolean(INDEX),
       });
     }
@@ -77,19 +87,21 @@ const server = createServer(async (req, res) => {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
-      return send(res, 200, { q, ...search(INDEX, q, { k: 10 }) });
+      const sem = await semFor(q);
+      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem }) });
     }
 
     if (req.method === 'POST' && req.url === '/api/answer') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
-      const r = search(INDEX, q, { k: 10 });
+      const sem = await semFor(q);
+      const r = search(INDEX, q, { k: 10, semScores: sem });
       // Nothing to ground on → refuse up front, never call the model to fill a gap.
       if (r.weak || !r.hits.length) {
         return send(res, 200, { q, mode: 'refused', refused: true, reason: 'Nothing in your vault matched that with enough confidence.', hits: r.hits, confidence: r.confidence });
       }
-      if (!answerConfigured()) {
+      if (!modelEnabled()) {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, weak: r.weak });
       }
       try {
@@ -107,10 +119,23 @@ const server = createServer(async (req, res) => {
       return send(res, 200, audit(INDEX, { staleDays: body.stale_days || 180 }));
     }
 
+    if (req.method === 'POST' && req.url === '/api/contradictions') {
+      if (!INDEX) return send(res, 503, { error: 'index not ready' });
+      if (!INDEX.embedded) return send(res, 200, { available: false, reason: 'Needs embeddings — set a model endpoint + MODEL_EMBED (e.g. local Ollama).', pairs: [] });
+      const body = await readBody(req).catch(() => ({}));
+      const found = similarPairs(INDEX, { threshold: body.threshold || 0.82, maxPairs: body.max || 20 });
+      if (body.adjudicate && modelEnabled()) {
+        const adj = await adjudicatePairs(found.pairs, { limit: body.limit || 6 });
+        return send(res, 200, { ...found, ...adj });
+      }
+      return send(res, 200, { ...found, adjudicated: false });
+    }
+
     if (req.method === 'POST' && req.url === '/api/reindex') {
       if (!VAULT_DIR) return send(res, 400, { error: 'VAULT_DIR not set' });
       INDEX = await buildIndex(VAULT_DIR);
-      return send(res, 200, { ok: true, notes: INDEX.notes.length, chunks: INDEX.N });
+      if (embeddingsEnabled()) await embedIndex(INDEX).catch(() => {});
+      return send(res, 200, { ok: true, notes: INDEX.notes.length, chunks: INDEX.N, embedded: Boolean(INDEX.embedded) });
     }
 
     if (req.url.startsWith('/api/')) return send(res, 404, { error: 'unknown endpoint' });
@@ -129,9 +154,18 @@ async function start() {
     process.stdout.write(`Indexing vault: ${VAULT_DIR} … `);
     INDEX = await buildIndex(VAULT_DIR);
     console.log(`${INDEX.notes.length} notes · ${INDEX.N} chunks`);
+    if (embeddingsEnabled()) {
+      process.stdout.write('Embedding (semantic search) … ');
+      try {
+        const r = await embedIndex(INDEX, (m) => process.stdout.write(`\rEmbedding … ${m}   `));
+        console.log(`\rEmbedded ${INDEX.N} chunks (${r.fresh} new, ${r.cached} cached) via ${r.model}        `);
+      } catch (e) {
+        console.log(`\n  embeddings unavailable (${e.message}) — falling back to lexical search.`);
+      }
+    }
   }
   server.listen(PORT, () =>
-    console.log(`CAIRN → http://localhost:${PORT}  (AI answers ${answerConfigured() ? 'on' : 'off — grounded search only'})`),
+    console.log(`CAIRN → http://localhost:${PORT}  · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
   );
 }
 start();
