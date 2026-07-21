@@ -4,7 +4,7 @@
 
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, watch } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, extname, normalize, basename } from 'node:path';
 
@@ -32,6 +32,8 @@ const PUBLIC = join(__dir, 'public');
 const PORT = process.env.PORT || 4600;
 const VAULT_DIR = process.env.VAULT_DIR ? process.env.VAULT_DIR.replace(/^~/, process.env.HOME || '~') : '';
 const VAULT_NAME = process.env.OBSIDIAN_VAULT_NAME || (VAULT_DIR ? basename(VAULT_DIR) : '');
+const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+const WATCH = (process.env.WATCH || 'on').toLowerCase() !== 'off';
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
 
 let INDEX = null;
@@ -65,6 +67,21 @@ function contextsFrom(hits, kctx = 6) {
 // Semantic scores for a query when the index is embedded (enables hybrid search).
 async function semFor(q) {
   return INDEX?.embedded ? semanticScores(INDEX, await embedQuery(q)) : null;
+}
+
+// Debounced auto-reindex when the vault changes (the embedding cache makes only
+// new/changed chunks re-embed, so this is cheap).
+let reindexTimer = null;
+function scheduleReindex() {
+  clearTimeout(reindexTimer);
+  reindexTimer = setTimeout(async () => {
+    try {
+      const idx = await buildIndex(VAULT_DIR, { exts: EXTS });
+      if (embeddingsEnabled()) await embedIndex(idx).catch(() => {});
+      INDEX = idx;
+      console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks${INDEX.embedded ? ' (embedded)' : ''}`);
+    } catch (e) { console.error('reindex failed:', e.message); }
+  }, 1500);
 }
 
 const server = createServer(async (req, res) => {
@@ -133,7 +150,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/api/reindex') {
       if (!VAULT_DIR) return send(res, 400, { error: 'VAULT_DIR not set' });
-      INDEX = await buildIndex(VAULT_DIR);
+      INDEX = await buildIndex(VAULT_DIR, { exts: EXTS });
       if (embeddingsEnabled()) await embedIndex(INDEX).catch(() => {});
       return send(res, 200, { ok: true, notes: INDEX.notes.length, chunks: INDEX.N, embedded: Boolean(INDEX.embedded) });
     }
@@ -152,7 +169,7 @@ async function start() {
     console.error(`\n  VAULT_DIR does not exist: ${VAULT_DIR}\n  Fix it in .env, then re-run.\n`);
   } else {
     process.stdout.write(`Indexing vault: ${VAULT_DIR} … `);
-    INDEX = await buildIndex(VAULT_DIR);
+    INDEX = await buildIndex(VAULT_DIR, { exts: EXTS });
     console.log(`${INDEX.notes.length} notes · ${INDEX.N} chunks`);
     if (embeddingsEnabled()) {
       process.stdout.write('Embedding (semantic search) … ');
@@ -167,5 +184,14 @@ async function start() {
   server.listen(PORT, () =>
     console.log(`CAIRN → http://localhost:${PORT}  · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
   );
+
+  if (WATCH && VAULT_DIR && existsSync(VAULT_DIR)) {
+    try {
+      watch(VAULT_DIR, { recursive: true }, (_ev, file) => {
+        if (file && EXTS.includes(extname(String(file)).toLowerCase())) scheduleReindex();
+      });
+      console.log('watching for changes — edits reindex automatically');
+    } catch (e) { console.log('file-watch unavailable:', e.message); }
+  }
 }
 start();

@@ -64,7 +64,17 @@ vault/*.md ──► index (frontmatter, headings, [[links]], #tags; chunk by he
 - `lib/ground.mjs` — optional grounded answer; the model may only use the retrieved notes.
 - `lib/audit.mjs` — the CRUCIBLE-shaped pass: where is the knowledge base itself weak?
 
-`POST /api/reindex` rebuilds after you edit the vault (or just restart).
+Edits **auto-reindex** (file-watch, debounced) — no restart needed. `POST /api/reindex` forces it.
+
+## Beyond a vault: find work you forgot you made
+
+Point `VAULT_DIR` at a whole project tree and CAIRN becomes a "what did I build?" engine — it skips `node_modules`, `.git`, `dist`, etc. automatically:
+
+```bash
+VAULT_DIR=~/projects INDEX_EXT=.md,.markdown,.txt PORT=4601 node server.mjs
+```
+
+Now search or ask across every README and note on disk: *"which project had the deterministic pricing model?"* → the forgotten repo, deep-linked.
 
 ## Why not just a RAG plugin?
 
