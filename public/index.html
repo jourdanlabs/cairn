@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CAIRN — find what you know</title>
+<style>
+  :root {
+    --bg:#0e0f13; --surface:#16181f; --surface2:#1c1f28; --ink:#e9ebf0; --muted:#8b93a3;
+    --line:#262a35; --line2:#333846; --accent:#d8a24a; --accent-ink:#141414;
+    --ok:#4fc98a; --bad:#ef5f6b; --warn:#e0a63f; --code:#1b1e27;
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#f7f7f5; --surface:#fff; --surface2:#f2f2ef; --ink:#17181c; --muted:#6b7280;
+      --line:#e7e7e2; --line2:#d8d8d2; --accent:#b57d2a; --accent-ink:#fff; --code:#f2f2ef; }
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:920px; margin:0 auto; padding:26px clamp(16px,4vw,36px) 90px; }
+  a { color:var(--accent); }
+  header.top { display:flex; align-items:baseline; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:baseline; gap:11px; }
+  .brand h1 { margin:0; font-size:21px; font-weight:800; letter-spacing:-0.02em; }
+  .brand .by { color:var(--muted); font-size:12px; }
+  .pill { font:600 11px/1 var(--mono); letter-spacing:.04em; text-transform:uppercase; padding:6px 9px; border-radius:999px; border:1px solid var(--line2); color:var(--muted); }
+  .pill.on { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 40%,transparent); }
+  .tagline { color:var(--muted); font-size:13.5px; margin:3px 0 20px; }
+  .tagline em { color:var(--ink); font-style:italic; }
+
+  .searchbar { display:flex; gap:10px; align-items:stretch; }
+  .searchbar input { flex:1; font-size:16px; color:var(--ink); background:var(--surface); border:1px solid var(--line2); border-radius:10px; padding:14px 16px; outline:none; }
+  .searchbar input:focus { border-color:var(--accent); }
+  .go { font:600 14px var(--sans); background:var(--accent); color:var(--accent-ink); border:0; border-radius:10px; padding:0 20px; cursor:pointer; }
+  .go:disabled { opacity:.5; cursor:not-allowed; }
+  .controls { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
+  .seg { display:inline-flex; background:var(--code); border:1px solid var(--line); border-radius:9px; padding:3px; gap:3px; }
+  .seg button { font:600 12px var(--sans); border:0; background:transparent; color:var(--muted); padding:7px 13px; border-radius:6px; cursor:pointer; }
+  .seg button[aria-pressed="true"] { background:var(--accent); color:var(--accent-ink); }
+  .ctrl-note { font:500 11px var(--mono); color:var(--muted); }
+  .auditbtn { margin-left:auto; font:600 11px var(--mono); letter-spacing:.06em; text-transform:uppercase; border:1px solid var(--line2); background:transparent; color:var(--muted); padding:8px 12px; border-radius:7px; cursor:pointer; }
+  .auditbtn:hover { color:var(--ink); border-color:var(--accent); }
+
+  #out { margin-top:22px; display:flex; flex-direction:column; gap:12px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+  .answer { border-color:color-mix(in srgb,var(--accent) 35%,var(--line)); }
+  .answer .ahead { display:flex; align-items:center; gap:10px; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .badge { font:600 11px var(--mono); letter-spacing:.05em; padding:5px 9px; border-radius:6px; border:1px solid var(--line2); color:var(--muted); }
+  .badge.ok { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 40%,transparent); }
+  .badge.bad { color:var(--bad); border-color:color-mix(in srgb,var(--bad) 40%,transparent); }
+  .answer .abody { padding:14px 18px; font-size:15px; line-height:1.6; }
+  .answer .abody sup a { color:var(--accent); text-decoration:none; font-weight:700; }
+  .cites { display:flex; flex-wrap:wrap; gap:6px; padding:0 18px 14px; }
+  .cite { font:600 11px var(--mono); border:1px solid var(--line2); border-radius:6px; padding:5px 8px; color:var(--muted); text-decoration:none; }
+  .cite:hover { color:var(--accent); border-color:var(--accent); }
+
+  .hit { padding:13px 18px; }
+  .hit .h-top { display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .hit .h-title { font-size:14.5px; font-weight:600; }
+  .hit .h-title .crumb { color:var(--muted); font-weight:500; }
+  .hit .h-meta { font:500 11px var(--mono); color:var(--muted); white-space:nowrap; }
+  .hit .snip { font-size:13.5px; color:var(--ink); opacity:.92; margin:7px 0 9px; line-height:1.55; }
+  .hit .snip mark { background:color-mix(in srgb,var(--accent) 26%,transparent); color:var(--ink); border-radius:2px; padding:0 2px; }
+  .hit .h-foot { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .h-foot a, .h-foot button { font:600 10px var(--mono); letter-spacing:.05em; text-transform:uppercase; border:1px solid var(--line2); background:transparent; color:var(--muted); padding:5px 9px; border-radius:6px; text-decoration:none; cursor:pointer; }
+  .h-foot a:hover, .h-foot button:hover { color:var(--accent); border-color:var(--accent); }
+  .tag { font:600 10px var(--mono); color:var(--muted); }
+
+  .refused { padding:18px; }
+  .refused .r-title { color:var(--bad); font-weight:700; font-size:15px; }
+  .refused p { color:var(--muted); font-size:13.5px; margin:8px 0 0; }
+
+  .audit-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--line); }
+  .audit-grid { display:grid; grid-template-columns:1fr; gap:0; }
+  .finding { border-top:1px solid var(--line); }
+  .finding:first-child { border-top:0; }
+  .finding summary { list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 18px; }
+  .finding summary::-webkit-details-marker { display:none; }
+  .finding .f-label { font-weight:600; font-size:13.5px; }
+  .finding .f-hint { color:var(--muted); font-size:12px; font-weight:400; margin-left:8px; }
+  .finding .count { font:700 12px var(--mono); padding:3px 9px; border-radius:999px; }
+  .finding .count.zero { color:var(--muted); border:1px solid var(--line2); }
+  .finding .count.some { color:var(--warn); border:1px solid color-mix(in srgb,var(--warn) 40%,transparent); }
+  .finding .items { padding:0 18px 14px; display:flex; flex-direction:column; gap:5px; }
+  .finding .items a { font:500 12px var(--mono); color:var(--muted); text-decoration:none; }
+  .finding .items a:hover { color:var(--accent); }
+  .empty { color:var(--muted); font-size:13px; padding:24px 4px; text-align:center; }
+  .err { color:var(--bad); font-size:13px; padding:14px 18px; }
+  footer { color:var(--muted); font-size:12px; margin-top:40px; text-align:center; }
+  .muted { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><h1>CAIRN</h1><span class="by">grounded search over your vault</span></div>
+    <span id="status" class="pill">indexing…</span>
+  </header>
+  <p class="tagline">Find what you know — <em>and see exactly where it came from</em>. Nothing leaves this machine.</p>
+
+  <div class="searchbar">
+    <input id="q" placeholder="Ask your vault… e.g. what did I decide about the pricing model?" autocomplete="off" />
+    <button class="go" id="go">Search</button>
+  </div>
+  <div class="controls">
+    <div class="seg" role="group" aria-label="mode">
+      <button id="m-search" aria-pressed="true">Search</button>
+      <button id="m-ask" aria-pressed="false">Ask</button>
+    </div>
+    <span class="ctrl-note" id="modenote">Ranked passages from your notes — no generation, no hallucination.</span>
+    <button class="auditbtn" id="auditbtn">Audit vault</button>
+  </div>
+
+  <section id="out"></section>
+  <footer id="foot">CAIRN · local · grounded · <span id="foot-ai"></span></footer>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const state = { mode: 'search', ai: false, vault: '' };
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function obsidianLink(noteRel){
+  if(!state.vault) return null;
+  const file = noteRel.replace(/\.md$/,'');
+  return `obsidian://open?vault=${encodeURIComponent(state.vault)}&file=${encodeURIComponent(file)}`;
+}
+function highlight(snip, qterms){
+  let h = esc(snip);
+  for(const t of (qterms||[])){ if(t.length<2) continue;
+    h = h.replace(new RegExp('\\b('+t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\w*)','gi'),'<mark>$1</mark>'); }
+  return h;
+}
+function crumb(h){ return h.headingPath && h.headingPath.length ? ' › '+h.headingPath.map(esc).join(' › ') : (h.heading?' › '+esc(h.heading):''); }
+function openBtns(noteRel){
+  const l = obsidianLink(noteRel);
+  return `${l?`<a href="${l}">Open in Obsidian</a>`:''}<button data-path="${esc(noteRel)}">Copy path</button>`;
+}
+function hitCard(h, qterms){
+  return `<div class="card"><div class="hit">
+    <div class="h-top"><div class="h-title">${esc(h.title)}<span class="crumb">${crumb(h)}</span></div>
+      <div class="h-meta">score ${h.score} · ${h.mtime}</div></div>
+    <div class="snip">${highlight(h.snippet, qterms)}</div>
+    <div class="h-foot">${openBtns(h.note)}${(h.tags||[]).slice(0,4).map(t=>`<span class="tag">#${esc(t)}</span>`).join('')}</div>
+  </div></div>`;
+}
+
+// --- mode toggle ---
+const NOTE = {
+  search: 'Ranked passages from your notes — no generation, no hallucination.',
+  ask: 'Synthesized answer, locked to your notes with citations — or "Not in your vault."',
+};
+function setMode(m){
+  state.mode = m;
+  $('#m-search').setAttribute('aria-pressed', m==='search');
+  $('#m-ask').setAttribute('aria-pressed', m==='ask');
+  $('#go').textContent = m==='ask' ? 'Ask' : 'Search';
+  $('#modenote').textContent = (m==='ask' && !state.ai)
+    ? 'Ask needs a model (set MODEL_API_KEY). Until then it returns grounded passages.'
+    : NOTE[m];
+}
+$('#m-search').onclick=()=>setMode('search');
+$('#m-ask').onclick=()=>setMode('ask');
+
+// --- status ---
+fetch('/api/status').then(r=>r.json()).then(s=>{
+  state.ai = s.ai; state.vault = s.vault_name || '';
+  const p = $('#status');
+  if(!s.ready){ p.textContent='no vault — set VAULT_DIR'; p.className='pill bad'; }
+  else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; }
+  $('#foot-ai').textContent = s.ai ? 'AI answers on' : 'grounded search (set MODEL_API_KEY for AI answers)';
+  setMode(state.mode);
+}).catch(()=>{ $('#status').textContent='server error'; });
+
+// --- run search / ask ---
+async function run(){
+  const q = $('#q').value.trim();
+  if(!q) { $('#q').focus(); return; }
+  const out = $('#out'); const btn = $('#go'); btn.disabled=true;
+  out.innerHTML = `<div class="empty">${state.mode==='ask'?'Reading your notes…':'Searching…'}</div>`;
+  try{
+    const ep = state.mode==='ask' ? '/api/answer' : '/api/search';
+    const res = await fetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({q})});
+    const d = await res.json();
+    if(!res.ok || d.error) throw new Error(d.error||('HTTP '+res.status));
+    render(d);
+  }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
+  finally{ btn.disabled=false; }
+}
+$('#go').onclick=run;
+$('#q').addEventListener('keydown',e=>{ if(e.key==='Enter') run(); });
+
+function render(d){
+  const out = $('#out');
+  // refusal
+  if(d.mode==='refused' || d.refused){
+    const reason = d.reason || (d.answer||'').trim();
+    out.innerHTML = `<div class="card refused"><div class="r-title">Not in your vault</div>
+      <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p></div>`;
+    if(d.hits && d.hits.length) out.innerHTML += `<div class="muted" style="font-size:12px;margin:4px 2px">Closest passages:</div>` + d.hits.slice(0,3).map(h=>hitCard(h,d.qterms)).join('');
+    return;
+  }
+  // grounded answer
+  if(d.mode==='answer'){
+    const cites = (d.citations||[]).map(c=>{ const l=obsidianLink(c.note);
+      return `<a class="cite" ${l?`href="${l}"`:''}>[${c.n}] ${esc(c.note)}${c.heading?' › '+esc(c.heading):''}</a>`; }).join('');
+    let body = esc(d.answer).replace(/\[(\d+)\]/g,'<sup><a href="#cite-$1">[$1]</a></sup>');
+    out.innerHTML = `<div class="card answer">
+      <div class="ahead"><span class="badge ok">Grounded answer</span><span class="badge">${d.grounded?'cited':'ungrounded'}</span><span class="badge">${esc(d.model||'')}</span></div>
+      <div class="abody">${body}</div>${cites?`<div class="cites">${cites}</div>`:''}</div>`;
+    if(d.hits) out.innerHTML += `<div class="muted" style="font-size:12px;margin:6px 2px">Sources:</div>` + d.hits.slice(0,6).map(h=>hitCard(h,d.qterms)).join('');
+    wirePaths();
+    return;
+  }
+  // passages
+  if(!d.hits || !d.hits.length){ out.innerHTML = `<div class="empty">No matching passages.</div>`; return; }
+  out.innerHTML = `<div class="muted" style="font-size:12px;margin:2px 2px">${d.hits.length} passage(s) · confidence ${d.confidence}</div>` + d.hits.map(h=>hitCard(h,d.qterms)).join('');
+  wirePaths();
+}
+function wirePaths(){
+  document.querySelectorAll('[data-path]').forEach(b=>b.onclick=()=>{ navigator.clipboard.writeText(b.dataset.path); b.textContent='Copied'; setTimeout(()=>b.textContent='Copy path',1200); });
+}
+
+// --- audit ---
+$('#auditbtn').onclick = async () => {
+  const out = $('#out'); out.innerHTML = `<div class="empty">Auditing vault…</div>`;
+  try{
+    const d = await (await fetch('/api/audit',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
+    const rows = d.findings.map(f=>{
+      const n = f.items.length;
+      const items = f.items.slice(0,50).map(it=>{
+        const note = it.note || it.from || (it.notes&&it.notes[0]) || '';
+        const label = it.link ? `${esc(it.from)} → [[${esc(it.link)}]]` : it.title ? `${esc(it.title)} — ${esc(note)}` : esc(note);
+        const l = obsidianLink(note);
+        return l ? `<a href="${l}">${label}</a>` : `<a>${label}</a>`;
+      }).join('');
+      return `<details class="finding" ${n&&f.key==='broken_links'?'open':''}>
+        <summary><span><span class="f-label">${esc(f.label)}</span><span class="f-hint">${esc(f.hint)}</span></span>
+          <span class="count ${n?'some':'zero'}">${n}</span></summary>
+        ${n?`<div class="items">${items}${f.items.length>50?`<span class="muted">…and ${f.items.length-50} more</span>`:''}</div>`:''}
+      </details>`;
+    }).join('');
+    out.innerHTML = `<div class="card"><div class="audit-head"><span class="badge">Vault audit</span>
+      <span class="muted" style="font:500 12px var(--mono)">${d.total_notes} notes · ${d.total_chunks} chunks</span></div>
+      <div class="audit-grid">${rows}</div></div>`;
+  }catch(err){ out.innerHTML = `<div class="card err">✕ ${esc(err.message)}</div>`; }
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "cairn",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Grounded, local search + audit over an Obsidian vault. Find what you know, prove where it came from.",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {}
+}
