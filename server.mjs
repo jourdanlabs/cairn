@@ -38,6 +38,7 @@ loadEnv();
 
 const PUBLIC = join(__dir, 'public');
 const PORT = process.env.PORT || 4600;
+const HOST = process.env.HOST || '127.0.0.1'; // loopback by default; opt into LAN with HOST=0.0.0.0
 const VAULT_DIR = process.env.VAULT_DIR ? process.env.VAULT_DIR.replace(/^~/, process.env.HOME || '~') : '';
 const VAULT_NAME = process.env.OBSIDIAN_VAULT_NAME || (VAULT_DIR ? basename(VAULT_DIR) : '');
 const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
@@ -359,8 +360,10 @@ async function start() {
       }
     }
   }
-  server.listen(PORT, () =>
-    console.log(`CAIRN → http://localhost:${PORT}  · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
+  // Bind loopback by DEFAULT so an open-mode instance is not exposed to the whole
+  // network. Set HOST=0.0.0.0 to serve the LAN (do that only with CAIRN_API_KEYS set).
+  server.listen(PORT, HOST, () =>
+    console.log(`CAIRN → http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}  · bind: ${HOST}${HOST === '0.0.0.0' && AUTH.open ? ' ⚠ open-mode on all interfaces — set CAIRN_API_KEYS' : ''} · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
   );
 
   if (WATCH && VAULT_DIR && existsSync(VAULT_DIR)) {

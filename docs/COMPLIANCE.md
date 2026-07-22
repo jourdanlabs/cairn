@@ -50,8 +50,14 @@ environment and generate the evidence those audits ask for.
 ### 3. Audit trail & evidence integrity
 - **Hash-chained receipt ledger.** Every answer and every integrity report is
   sealed into an append-only JSONL where each entry binds the prior entry's hash.
-  Any later edit to any past line is detectable. — `core/ledger.mjs`,
-  `test/ledger.test.mjs`
+  Any edit to a hashed field of any past entry — the sequence, prior-hash link, or
+  payload — is detectable, as is deleting or reordering a line. One field is
+  deliberately outside the hash: the human-readable `ts` timestamp (so a fixed
+  clock isn't required for reproducible hashes), so a change to `ts` alone is the
+  one edit the chain does not flag. — `core/ledger.mjs`, `test/ledger.test.mjs`
+  - *Single-writer assumption:* the chain is correct for one writer. Two processes
+    appending to the same ledger file concurrently can fork it — run one writer per
+    ledger, or a ledger per instance.
 - **Verification endpoint** recomputes the whole chain: `GET /api/ledger/verify`.
 - **Evidence export** bundles the current integrity posture + the full sealed
   chain + its verification for an auditor: `GET /api/compliance/export`.
