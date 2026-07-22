@@ -1,0 +1,7 @@
+{
+  "results": [
+    { "id": "9004", "name": "howto", "prefix": "global" },
+    { "id": "9005", "name": "draft", "prefix": "global" }
+  ],
+  "_links": {}
+}

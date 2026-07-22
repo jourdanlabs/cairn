@@ -1,0 +1,9 @@
+.git
+.cairn
+.env
+.cache
+node_modules
+*.log
+.DS_Store
+.claude
+examples/*/.obsidian

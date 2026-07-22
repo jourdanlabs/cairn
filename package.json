@@ -7,7 +7,8 @@
   "engines": { "node": ">=18" },
   "scripts": {
     "start": "node server.mjs",
-    "dev": "node server.mjs"
+    "dev": "node server.mjs",
+    "test": "node --test"
   },
   "license": "MIT",
   "dependencies": {}

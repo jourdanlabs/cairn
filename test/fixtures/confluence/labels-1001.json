@@ -1,0 +1,7 @@
+{
+  "results": [
+    { "id": "9001", "name": "policy", "prefix": "global" },
+    { "id": "9002", "name": "reviewed", "prefix": "global" }
+  ],
+  "_links": {}
+}

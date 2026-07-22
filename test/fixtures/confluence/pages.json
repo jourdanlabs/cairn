@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "id": "1001",
+      "status": "current",
+      "title": "Data Retention Policy",
+      "spaceId": "77001",
+      "version": { "number": 3, "createdAt": "2026-05-01T10:00:00.000Z", "authorId": "acc-1" },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<h1>Data Retention Policy</h1><p>Records must be retained for <strong>seven years</strong>.</p><p>Applies to the following record types:</p><ul><li>Financial statements</li><li>Contracts &amp; agreements</li><li>Audit logs</li></ul><p>See also <ac:link><ri:page ri:content-title=\"Security Standards\" /></ac:link> for controls.</p>"
+        }
+      },
+      "_links": { "webui": "/spaces/DEV/pages/1001/Data+Retention+Policy" }
+    },
+    {
+      "id": "1002",
+      "status": "current",
+      "title": "Security Standards",
+      "spaceId": "77001",
+      "version": { "number": 7, "createdAt": "2026-06-15T09:30:00.000Z", "authorId": "acc-2" },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<h2>Security Standards</h2><p>All systems must comply with the following:</p><ol><li>Encrypt data at rest</li><li>Enforce MFA</li><li>Rotate keys quarterly</li></ol><p>Derived from <ac:link><ri:page ri:content-title=\"Data Retention Policy\" /></ac:link>.</p>"
+        }
+      },
+      "_links": { "webui": "/spaces/DEV/pages/1002/Security+Standards" }
+    },
+    {
+      "id": "1003",
+      "status": "current",
+      "title": "Team Onboarding Notes",
+      "spaceId": "77002",
+      "version": { "number": 1, "createdAt": "2026-07-01T12:00:00.000Z", "authorId": "acc-3" },
+      "body": {
+        "storage": {
+          "representation": "storage",
+          "value": "<h2>Team Onboarding Notes</h2><p>Ping the team lead with any <em>questions</em> &#8212; this is still a <code>&lt;draft&gt;</code>.</p><p>Common Q&amp;A topics:</p><ul><li>Laptop setup</li><li>VPN &amp; access</li></ul>"
+        }
+      },
+      "_links": { "webui": "/spaces/TEAM/pages/1003/Team+Onboarding+Notes" }
+    }
+  ],
+  "_links": { "base": "https://acme.atlassian.net/wiki" }
+}

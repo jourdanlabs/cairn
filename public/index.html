@@ -182,12 +182,37 @@ function setMode(m){
 $('#m-search').onclick=()=>setMode('search');
 $('#m-ask').onclick=()=>setMode('ask');
 
+// --- auth (closed mode): inject an API key from localStorage on every /api call.
+// In open (local) mode there's no key and requests pass through unchanged. ---
+function apiKey(){ return localStorage.getItem('cairn_key') || ''; }
+function setApiKey(){
+  const k = prompt('CAIRN API key (leave blank to clear):', apiKey());
+  if(k===null) return;
+  k ? localStorage.setItem('cairn_key', k) : localStorage.removeItem('cairn_key');
+  location.reload();
+}
+function apiFetch(url, opts={}){
+  const h = Object.assign({}, opts.headers||{});
+  const k = apiKey(); if(k) h['Authorization'] = 'Bearer ' + k;
+  return fetch(url, Object.assign({}, opts, { headers:h }));
+}
+
 // --- status ---
-fetch('/api/status').then(r=>r.json()).then(s=>{
+apiFetch('/api/status').then(async r=>{
+  if(r.status===401 || r.status===403){
+    const p = $('#status');
+    p.textContent = '🔒 API key required — click to set';
+    p.className = 'pill bad'; p.style.cursor='pointer'; p.onclick = setApiKey;
+    return null;
+  }
+  return r.json();
+}).then(s=>{
+  if(!s) return;
   state.ai = s.ai; state.vault = s.vault_name || '';
   const p = $('#status');
   if(!s.ready){ p.textContent='no vault — set VAULT_DIR'; p.className='pill bad'; }
   else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; }
+  if(s.auth==='closed'){ p.title='closed mode — click to change API key'; p.style.cursor='pointer'; p.onclick=setApiKey; }
   state.embedded = s.embedded;
   $('#foot-ai').textContent = `${s.search_mode||'lexical'} · Ask ${s.ai?'on':'off'}`;
   setMode(state.mode);
@@ -201,7 +226,7 @@ async function run(){
   out.innerHTML = `<div class="empty">${state.mode==='ask'?'Reading your notes…':'Searching…'}</div>`;
   try{
     const ep = state.mode==='ask' ? '/api/answer' : '/api/search';
-    const res = await fetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({q})});
+    const res = await apiFetch(ep,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({q})});
     const d = await res.json();
     if(!res.ok || d.error) throw new Error(d.error||('HTTP '+res.status));
     render(d);
@@ -258,7 +283,7 @@ function wireReceipt(){ const b=document.getElementById('dl-receipt'); if(b&&las
 $('#auditbtn').onclick = async () => {
   const out = $('#out'); out.innerHTML = `<div class="empty">Auditing vault…</div>`;
   try{
-    const d = await (await fetch('/api/audit',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
+    const d = await (await apiFetch('/api/audit',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
     const rows = d.findings.map(f=>{
       const n = f.items.length;
       const items = f.items.slice(0,50).map(it=>{
@@ -295,7 +320,7 @@ async function loadOverlaps(adjudicate){
   const out = $('#out');
   out.innerHTML = `<div class="empty">${adjudicate?'Classifying pairs with the local model (this is slow — a few seconds each)…':'Finding overlapping notes…'}</div>`;
   try{
-    const d = await (await fetch('/api/contradictions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({threshold:0.8,max:12,adjudicate:!!adjudicate,limit:5})})).json();
+    const d = await (await apiFetch('/api/contradictions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({threshold:0.8,max:12,adjudicate:!!adjudicate,limit:5})})).json();
     if(d.available===false){ out.innerHTML = `<div class="card refused"><div class="r-title">Overlap detection needs embeddings</div><p>${esc(d.reason||'')}</p></div>`; return; }
     if(!d.pairs.length){ out.innerHTML = `<div class="empty">No strongly-overlapping note pairs found. Your vault is tidy.</div>`; return; }
     const head = `<div class="card"><div class="audit-head"><span class="badge">Overlaps · same-topic note pairs</span>
@@ -311,7 +336,7 @@ $('#overlapbtn').onclick = () => loadOverlaps(false);
 $('#integritybtn').onclick = async () => {
   const out = $('#out'); out.innerHTML = `<div class="empty">Computing knowledge integrity report…</div>`;
   try{
-    const d = await (await fetch('/api/integrity',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
+    const d = await (await apiFetch('/api/integrity',{method:'POST',headers:{'content-type':'application/json'},body:'{}'})).json();
     if(d.error) throw new Error(d.error);
     const col = d.integrity_score>=80?'var(--ok)':d.integrity_score>=60?'var(--warn)':'var(--bad)';
     const findings = d.findings.map(f=>`<details class="finding"><summary><span><span class="f-label">${esc(f.label)}</span><span class="f-hint">${esc(f.hint)}</span></span><span class="count ${f.count?'some':'zero'}">${f.count}</span></summary>${f.count?`<div class="items">${f.items.slice(0,40).map(it=>{const note=it.note||it.from||(it.notes&&it.notes[0])||'';const label=it.link?`${esc(it.from)} → [[${esc(it.link)}]]`:it.title?`${esc(it.title)} — ${esc(note)}`:esc(note);const l=obsidianLink(note);return l?`<a href="${l}">${label}</a>`:`<a>${label}</a>`;}).join('')}</div>`:''}</details>`).join('');
