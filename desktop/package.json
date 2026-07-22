@@ -16,7 +16,10 @@
   "build": {
     "appId": "com.jourdanlabs.cairn",
     "productName": "CAIRN Studio",
-    "files": ["main.js"],
+    "files": ["main.js", "preload.js"],
+    "extraResources": [
+      { "from": "../", "to": "cairn-core", "filter": ["server.mjs", "package.json", ".env.example", "README.md", "LICENSE", "lib/**/*", "core/**/*", "connectors/**/*", "public/**/*"] }
+    ],
     "mac": {
       "identity": null,
       "icon": "build/icon.png",

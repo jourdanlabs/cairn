@@ -14,9 +14,10 @@ const url = `http://127.0.0.1:${port}`;
 
 // From source (`npm start`) the repo is desktop/.. ; a packaged .app falls back to the
 // known checkout (a dev-launcher for the operator's machine, like OMNIS KEY's).
+// Packaged: the zero-dep core is bundled read-only in the app's Resources. Dev: the repo.
 const root =
   process.env.CAIRN_ROOT ||
-  (app.isPackaged ? path.join(os.homedir(), "projects", "cairn") : path.join(__dirname, ".."));
+  (app.isPackaged ? path.join(process.resourcesPath, "cairn-core") : path.join(__dirname, ".."));
 
 // ── persisted settings (last vault) ─────────────────────────────────────────────
 const configPath = () => path.join(app.getPath("userData"), "cairn-studio.json");
@@ -34,13 +35,18 @@ let server;
 
 function startServer(vault) {
   if (process.env.CAIRN_SKIP_SERVER) return;
-  // A double-clicked .app gets a bare PATH; launch through a login shell so the user's
-  // real node is found, and `exec` so kill() reaches it. HOST stays loopback.
-  const sh = process.env.SHELL || "/bin/zsh";
-  const env = { ...process.env, PORT: String(port), HOST: "127.0.0.1" };
+  // Run the server with Electron's OWN Node (ELECTRON_RUN_AS_NODE) so no system `node`
+  // is required — truly self-contained. State goes to a writable userData dir (the
+  // bundled core in Resources is read-only). HOST stays loopback.
+  const env = {
+    ...process.env,
+    ELECTRON_RUN_AS_NODE: "1",
+    PORT: String(port), HOST: "127.0.0.1",
+    CAIRN_STATE_DIR: path.join(app.getPath("userData"), "state"),
+  };
   if (vault) env.VAULT_DIR = vault;          // explicit choice overrides .env
   else delete env.VAULT_DIR;                  // no choice → let server.mjs read its .env
-  server = spawn(sh, ["-lc", "exec node server.mjs"], { cwd: root, stdio: "inherit", env });
+  server = spawn(process.execPath, [path.join(root, "server.mjs")], { cwd: root, stdio: "inherit", env });
   server.on("error", (e) => console.error(`[cairn] server error: ${e.message}`));
 }
 function stopServer() { if (server) { try { server.kill("SIGINT"); } catch {} server = null; } }

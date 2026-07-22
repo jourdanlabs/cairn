@@ -23,9 +23,15 @@ Point it at a vault the same way the server does — a `.env` at the repo root, 
 npm run dist         # electron-builder → dist/CAIRN Studio.dmg  (icon from build/icon.png)
 ```
 
-## Honest note
+## Self-contained
 
-The scaffold (`main.js`, `package.json`, `build/icon.png`) is complete and mirrors the
-working OMNIS KEY desktop setup verbatim; the one step that must run on your machine is
-`npm install` (it fetches the Electron binary over the network) and the actual window
-launch. Those weren't run in the build session — everything up to them is in place.
+The packaged `.dmg` is **fully self-contained** — it runs on any Mac, no `~/projects/cairn`
+checkout required:
+- The zero-dependency core (`server.mjs`, `lib/`, `core/`, `connectors/`, `public/`) is
+  bundled read-only into the app's `Resources/cairn-core` via `extraResources`.
+- The server runs on **Electron's own Node** (`ELECTRON_RUN_AS_NODE`), so no system `node`
+  is needed either.
+- Writable state (receipt ledger, preferences, access log, uploaded art) lives in the app's
+  `userData` dir (`CAIRN_STATE_DIR`), since Resources is read-only.
+
+Point it at a vault via the in-app **Open Vault…** picker (⌘O) or the welcome tour — any folder.

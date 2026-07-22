@@ -54,19 +54,20 @@ let INDEX = null;
 // Enterprise controls (all no-op in local/open mode): auth/RBAC, a hash-chained
 // receipt ledger, and a surveillance state file. Open unless CAIRN_API_KEYS is set.
 const AUTH = makeAuth();
-const LEDGER = new Ledger(join(__dir, '.cairn', 'ledger.jsonl'));
-const STATE_PATH = join(__dir, '.cairn', 'surveillance.json');
+const STATE_DIR = process.env.CAIRN_STATE_DIR || join(__dir, '.cairn');
+const LEDGER = new Ledger(join(STATE_DIR, 'ledger.jsonl'));
+const STATE_PATH = join(STATE_DIR, 'surveillance.json');
 
 // ── user preferences ── a small, persisted settings object the UI edits. Some are
 // UI-only (hero art); others change server behavior (strictness gate, staleness,
 // fully-local lock) and are applied on load + save.
-const PREFS_PATH = join(__dir, '.cairn', 'preferences.json');
-const USER_ART_DIR = join(__dir, '.cairn', 'art');
+const PREFS_PATH = join(STATE_DIR, 'preferences.json');
+const USER_ART_DIR = join(STATE_DIR, 'art');
 const HERO_DIR = join(PUBLIC, 'art', 'heroes');
 const PREFS_DEFAULTS = { hero: 'manuscript', theme: 'light', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82, extensions: null, surveillanceIntervalMin: 0 };
 // Who-did-what access log: every gated request appends a record here (tamper-plain
 // JSONL, distinct from the receipt ledger). Powers GET /api/access-log for auditors.
-const ACCESS_LOG = join(__dir, '.cairn', 'access.jsonl');
+const ACCESS_LOG = join(STATE_DIR, 'access.jsonl');
 function logAccess(rec) {
   try { mkdirSync(dirname(ACCESS_LOG), { recursive: true }); appendFileSync(ACCESS_LOG, JSON.stringify(rec) + '\n'); } catch { /* best effort */ }
 }
@@ -94,7 +95,7 @@ function listHeroes() {
   return out;
 }
 loadPrefs();
-const surveillanceSinks = [consoleSink, fileSink(join(__dir, '.cairn', 'alerts.jsonl'))];
+const surveillanceSinks = [consoleSink, fileSink(join(STATE_DIR, 'alerts.jsonl'))];
 if (process.env.CAIRN_ALERT_WEBHOOK) surveillanceSinks.push(webhookSink(process.env.CAIRN_ALERT_WEBHOOK));
 
 // Connector configs come from env (secrets never travel in request bodies). The
