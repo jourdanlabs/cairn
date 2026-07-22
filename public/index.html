@@ -169,8 +169,10 @@
   .onboard { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:24px;
     background:radial-gradient(120% 80% at 50% -10%, rgba(247,240,222,.97), rgba(236,227,208,.985)), var(--bg); overflow:auto; }
   .onboard.show { display:flex; }
-  .ob-card { width:min(640px,95vw); background:var(--surface); border:1px solid var(--line2); border-radius:6px;
+  .ob-card { position:relative; width:min(640px,95vw); background:var(--surface); border:1px solid var(--line2); border-radius:6px;
     box-shadow:0 1px 0 rgba(255,252,244,.6),0 26px 64px -26px rgba(70,46,18,.55); overflow:hidden; animation:leafIn .45s ease-out both; }
+  .ob-x { position:absolute; top:11px; right:14px; z-index:2; font:400 18px var(--sans); color:#8a7c5e; background:none; border:0; cursor:pointer; padding:4px 8px; line-height:1; }
+  .ob-x:hover { color:#241d10; }
   .ob-hero { padding:26px 30px 18px; background:linear-gradient(#f7f0df,#f2ead6); border-bottom:1px solid var(--line); }
   .ob-eyebrow { font:600 10.5px var(--mono); letter-spacing:.18em; text-transform:uppercase; color:var(--brass-deep); margin:0 0 8px; }
   .ob-hero h2 { font:600 29px/1.05 var(--serif); color:#241d10; margin:0 0 9px; letter-spacing:.01em; }
@@ -253,6 +255,7 @@
 
   <div id="onboard" class="onboard" role="dialog" aria-modal="true" aria-label="Connect your knowledge">
     <div class="ob-card">
+      <button class="ob-x" id="ob-close" aria-label="Close" title="Close">✕</button>
       <div class="ob-hero">
         <p class="ob-eyebrow">Welcome to CAIRN</p>
         <h2>Let's connect your knowledge.</h2>
@@ -270,6 +273,11 @@
   <div id="prefs" class="prefs" role="dialog" aria-modal="true" aria-label="Preferences">
     <div class="pf-card">
       <div class="pf-head"><h2>Preferences</h2><button class="x" id="pf-close" aria-label="Close">✕</button></div>
+      <div class="pf-sec">
+        <p class="pf-title">Knowledge</p>
+        <div class="pf-row"><div><div class="pf-label">Connect a vault</div><div class="pf-desc">Switch vaults, connect your Obsidian, or re-run the welcome tour.</div></div>
+          <button class="auditbtn" id="pf-tour">Open the tour</button></div>
+      </div>
       <div class="pf-sec">
         <p class="pf-title">Masthead art</p>
         <div class="hero-grid" id="hero-grid"></div>
@@ -472,9 +480,12 @@ document.getElementById('art-file').onchange=async(e)=>{
   e.target.value='';
 };
 document.getElementById('prefsbtn').onclick=openPrefs;
+document.getElementById('pf-tour').onclick=()=>{ closePrefs(); showOnboarding(); };
 document.getElementById('pf-close').onclick=closePrefs;
 document.getElementById('prefs').onclick=(e)=>{ if(e.target.id==='prefs') closePrefs(); };
-window.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key===','){ e.preventDefault(); openPrefs(); } else if(e.key==='Escape') closePrefs(); });
+document.getElementById('ob-close').onclick=hideOnboarding;
+document.getElementById('onboard').onclick=(e)=>{ if(e.target.id==='onboard') hideOnboarding(); };
+window.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key===','){ e.preventDefault(); openPrefs(); } else if(e.key==='Escape'){ closePrefs(); hideOnboarding(); } });
 loadPrefs();
 
 // --- status ---
