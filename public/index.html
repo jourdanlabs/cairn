@@ -237,6 +237,10 @@
   .hero-up { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:1.5px dashed var(--line2); color:var(--brass-deep);
     font:600 10.5px var(--mono); letter-spacing:.06em; text-transform:uppercase; cursor:pointer; background:#fbf6ea; text-align:center; line-height:1.4; }
   .hero-up:hover { border-color:var(--brass); }
+  .ext-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .ext-chip { font:600 11px var(--mono); letter-spacing:.03em; padding:7px 12px; border-radius:999px; border:1px solid var(--line2); background:#fbf6ea; color:#6f6349; cursor:pointer; }
+  .ext-chip.on { background:var(--sage); border-color:var(--sage-deep); color:#f7f1e1; }
+  .ext-chip:hover { border-color:var(--brass); }
 </style>
 </head>
 <body>
@@ -259,7 +263,7 @@
       <div class="ob-hero">
         <p class="ob-eyebrow">Welcome to CAIRN</p>
         <h2>Let's connect your knowledge.</h2>
-        <p>CAIRN reads your notes and answers <em>only</em> what it can prove — a citation for every claim, a receipt for every answer, and a refusal instead of a guess. It runs entirely on this machine; nothing leaves.</p>
+        <p>Point CAIRN at <em>any</em> folder of notes or documents — an Obsidian vault, a project tree, a shared drive. It answers only what it can prove, with a citation for every claim and a receipt for every answer. It runs entirely on this machine; nothing leaves.</p>
       </div>
       <div class="ob-body" id="ob-body"><div class="ob-load">Looking for your vaults…</div></div>
       <div class="ob-foot">
@@ -296,6 +300,12 @@
           <div style="display:flex;align-items:center;gap:8px"><input type="number" min="1" max="3650" class="pf-num" id="pf-stale"><span class="pf-val" style="min-width:auto">days</span></div></div>
         <div class="pf-row"><div><div class="pf-label">Contradiction sensitivity</div><div class="pf-desc">How similar two notes must be to surface as a candidate.</div></div>
           <div style="display:flex;align-items:center;gap:10px"><input type="range" min="60" max="98" class="pf-slider" id="pf-contra"><span class="pf-val" id="pf-contra-val"></span></div></div>
+      </div>
+      <div class="pf-sec">
+        <p class="pf-title">File types</p>
+        <div class="pf-desc" style="margin-bottom:12px">Which files CAIRN indexes. Word/PowerPoint/Excel and text extract cleanly; PDFs are best-effort — scanned or complex PDFs are flagged, not read.</div>
+        <div class="ext-chips" id="pf-exts"></div>
+        <div id="pf-ext-note" class="pf-desc" style="margin-top:11px;display:none;color:var(--brass-deep)">Changed — <button class="cite" id="pf-reindex" style="cursor:pointer">reindex now</button> to apply.</div>
       </div>
       <div class="pf-sec">
         <p class="pf-title">Privacy</p>
@@ -403,16 +413,17 @@ async function showOnboarding(){
   let list=[];
   try { list=(await (await apiFetch('/api/obsidian-vaults')).json()).vaults||[]; } catch {}
   const desktop=isDesktop();
-  let html=`<p class="ob-step">${desktop?'Choose a vault to index':'Connect a vault'}</p>`;
+  let html=`<p class="ob-step">${desktop?'Choose a folder to index':'Connect a folder of notes'}</p>`;
   if(list.length){
+    html+=`<div class="ob-none" style="margin:-4px 0 9px">Detected Obsidian vaults — a shortcut. You can point CAIRN at <b>any</b> folder ${desktop?'with Browse below':'instead'}.</div>`;
     html+=`<div class="ob-vaults">`+list.map(v=>`<button class="ob-vault" data-path="${esc(v.path)}">${VGLYPH}
       <span><span class="v-name">${esc(v.name)}</span><div class="v-path">${esc(v.path)}</div></span>
       <span class="v-go">${desktop?'Connect →':'Copy path'}</span></button>`).join('')+`</div>`;
   } else {
-    html+=`<div class="ob-none">No Obsidian vaults found on this machine — ${desktop?'browse for any folder of notes below.':'point CAIRN at a folder of notes.'}</div>`;
+    html+=`<div class="ob-none">Point CAIRN at any folder of notes or documents${desktop?' — browse below.':'.'}</div>`;
   }
   if(desktop){
-    html+=`<div class="ob-browse"><button class="auditbtn" id="ob-browse">Browse for a folder…</button></div>`;
+    html+=`<div class="ob-browse"><button class="auditbtn" id="ob-browse">Browse to any folder…</button></div>`;
   } else {
     html+=`<div class="ob-none" style="margin-top:11px">In the browser, set <span class="ob-code">VAULT_DIR</span> in your <span class="ob-code">.env</span>${list.length?' (copy one above)':''} and restart <span class="ob-code">node server.mjs</span>.</div>`;
   }
@@ -432,13 +443,24 @@ async function onVaultPick(btn){
 }
 
 // --- preferences: settings panel (appearance / answering / integrity / privacy) ---
-let PREFS = null;
+let PREFS = null, ALLOWED_EXTS = [], EFF_EXTS = [];
 const heroUrl = (h) => h && h.startsWith('user:') ? '/user-art/'+encodeURIComponent(h.slice(5)) : '/art/heroes/'+encodeURIComponent(h)+'.jpg';
 const strictLabel = (v) => { v=Number(v); return v<34?'Lenient':v<50?'Relaxed':v==50?'Calibrated':v<75?'Careful':'Strict'; };
 function applyHero(h){ const img=document.querySelector('.masthead img'); if(img&&h) img.src=heroUrl(h); }
 async function loadPrefs(){
-  try { PREFS=(await (await apiFetch('/api/preferences')).json()).preferences; } catch { PREFS=null; }
+  try { const r=await (await apiFetch('/api/preferences')).json(); PREFS=r.preferences; ALLOWED_EXTS=r.allowed_extensions||[]; EFF_EXTS=r.effective_extensions||[]; } catch { PREFS=null; }
   if(PREFS){ if(PREFS.hero) applyHero(PREFS.hero); if(PREFS.searchMode) setMode(PREFS.searchMode); }
+}
+function renderExtChips(){
+  const wrap=document.getElementById('pf-exts'); if(!wrap) return;
+  const enabled=new Set(EFF_EXTS);
+  wrap.innerHTML=ALLOWED_EXTS.map(e=>`<button class="ext-chip ${enabled.has(e)?'on':''}" data-ext="${e}">${e}</button>`).join('');
+  wrap.querySelectorAll('.ext-chip').forEach(c=>c.onclick=()=>{
+    const e=c.dataset.ext; if(enabled.has(e)) enabled.delete(e); else enabled.add(e);
+    c.classList.toggle('on'); EFF_EXTS=[...enabled];
+    savePref({extensions:[...enabled]}); document.getElementById('pf-ext-note').style.display='block';
+  });
+  document.getElementById('pf-reindex').onclick=async()=>{ document.getElementById('pf-ext-note').innerHTML='Reindexing your library…'; try { await apiFetch('/api/reindex',{method:'POST'}); } catch {} location.reload(); };
 }
 async function savePref(patch){ if(PREFS) Object.assign(PREFS,patch); try { await apiFetch('/api/preferences',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(patch)}); } catch {} }
 function selectHero(id){ savePref({hero:id}); applyHero(id); document.querySelectorAll('.hero-tile[data-hero]').forEach(t=>t.classList.toggle('sel',t.dataset.hero===id)); }
@@ -467,6 +489,7 @@ async function openPrefs(){
   local.onclick=()=>{ const v=!PREFS.localOnly; local.classList.toggle('on',v); savePref({localOnly:v}); };
   document.querySelectorAll('#pf-mode button').forEach(b=>{ b.classList.toggle('on',b.dataset.m===PREFS.searchMode);
     b.onclick=()=>{ document.querySelectorAll('#pf-mode button').forEach(x=>x.classList.toggle('on',x===b)); savePref({searchMode:b.dataset.m}); setMode(b.dataset.m); }; });
+  renderExtChips();
 }
 function closePrefs(){ document.getElementById('prefs').classList.remove('show'); }
 document.getElementById('art-file').onchange=async(e)=>{

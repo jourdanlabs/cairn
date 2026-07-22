@@ -63,8 +63,12 @@ const STATE_PATH = join(__dir, '.cairn', 'surveillance.json');
 const PREFS_PATH = join(__dir, '.cairn', 'preferences.json');
 const USER_ART_DIR = join(__dir, '.cairn', 'art');
 const HERO_DIR = join(PUBLIC, 'art', 'heroes');
-const PREFS_DEFAULTS = { hero: 'manuscript', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82 };
+const PREFS_DEFAULTS = { hero: 'manuscript', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82, extensions: null };
+// Every file type CAIRN can index. Markdown/text are read directly; Office/PDF/RTF go
+// through the zero-dep extractors. `extensions: null` means "use the env INDEX_EXT default".
+const ALLOWED_EXTS = ['.md', '.markdown', '.txt', '.text', '.log', '.csv', '.tsv', '.rtf', '.docx', '.pptx', '.xlsx', '.pdf'];
 let PREFS = { ...PREFS_DEFAULTS };
+const effExts = () => (Array.isArray(PREFS.extensions) && PREFS.extensions.length) ? PREFS.extensions : EXTS;
 function applyPrefs() {
   if (PREFS.localOnly) process.env.MODEL_LOCAL_ONLY = '1'; else delete process.env.MODEL_LOCAL_ONLY;
 }
@@ -91,7 +95,7 @@ if (process.env.CAIRN_ALERT_WEBHOOK) surveillanceSinks.push(webhookSink(process.
 // filesystem connector points at the same vault; Confluence needs a tenant + token.
 function connectorConfig(name) {
   const e = process.env;
-  if (name === 'filesystem') return { dir: VAULT_DIR, exts: EXTS, controlledDirs: CONTROLLED_DIRS };
+  if (name === "filesystem") return { dir: VAULT_DIR, exts: effExts(), controlledDirs: CONTROLLED_DIRS };
   if (name === 'confluence') return {
     baseUrl: e.CONFLUENCE_BASE_URL, email: e.CONFLUENCE_EMAIL, token: e.CONFLUENCE_TOKEN,
     spaceKeys: (e.CONFLUENCE_SPACES || '').split(',').map((s) => s.trim()).filter(Boolean),
@@ -193,7 +197,7 @@ function scheduleReindex() {
   clearTimeout(reindexTimer);
   reindexTimer = setTimeout(async () => {
     try {
-      const idx = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
+      const idx = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
       if (embeddingsEnabled()) await embedIndex(idx).catch(() => {});
       INDEX = idx;
       console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks${INDEX.embedded ? ' (embedded)' : ''}`);
@@ -224,7 +228,7 @@ const server = createServer(async (req, res) => {
 
     // ── preferences ── the UI's settings; GET reads, POST merges + applies.
     if (req.method === 'GET' && reqPath === '/api/preferences') {
-      return send(res, 200, { preferences: PREFS });
+      return send(res, 200, { preferences: PREFS, allowed_extensions: ALLOWED_EXTS, effective_extensions: effExts() });
     }
     if (req.method === 'POST' && reqPath === '/api/preferences') {
       const body = await readBody(req).catch(() => ({}));
@@ -235,6 +239,7 @@ const server = createServer(async (req, res) => {
       if (p.searchMode === 'search' || p.searchMode === 'ask') PREFS.searchMode = p.searchMode;
       if (typeof p.localOnly === 'boolean') PREFS.localOnly = p.localOnly;
       if (Number.isFinite(p.contradictionThreshold)) PREFS.contradictionThreshold = Math.max(0.5, Math.min(0.99, p.contradictionThreshold));
+      if (Array.isArray(p.extensions)) { const v = p.extensions.map((e) => String(e).toLowerCase()).filter((e) => ALLOWED_EXTS.includes(e)); PREFS.extensions = v.length ? v : null; }
       applyPrefs(); savePrefs();
       return send(res, 200, { ok: true, preferences: PREFS });
     }
@@ -426,7 +431,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/api/reindex') {
       if (!VAULT_DIR) return send(res, 400, { error: 'VAULT_DIR not set' });
-      INDEX = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
+      INDEX = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
       if (embeddingsEnabled()) await embedIndex(INDEX).catch(() => {});
       return send(res, 200, { ok: true, notes: INDEX.notes.length, chunks: INDEX.N, embedded: Boolean(INDEX.embedded) });
     }
@@ -445,7 +450,7 @@ async function start() {
     console.error(`\n  VAULT_DIR does not exist: ${VAULT_DIR}\n  Fix it in .env, then re-run.\n`);
   } else {
     process.stdout.write(`Indexing vault: ${VAULT_DIR} … `);
-    INDEX = await buildIndex(VAULT_DIR, { exts: EXTS, controlledDirs: CONTROLLED_DIRS });
+    INDEX = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
     console.log(`${INDEX.notes.length} notes · ${INDEX.N} chunks`);
     if (embeddingsEnabled()) {
       process.stdout.write('Embedding (semantic search) … ');
