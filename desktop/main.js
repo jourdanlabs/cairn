@@ -51,7 +51,7 @@ function createWindow() {
     minHeight: 640,
     backgroundColor: "#ece3d0", // parchment, so first paint matches the archive
     title: "CAIRN Studio",
-    titleBarStyle: "hiddenInset",
+    titleBarStyle: "default", // a real, draggable macOS titlebar (a frameless one needs a CSS drag region — that's the bug OMNIS KEY hit)
     webPreferences: { contextIsolation: true, nodeIntegration: false },
   });
   win.loadURL(url);
