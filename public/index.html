@@ -22,6 +22,139 @@
     --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
     --leaf-shadow:0 1px 0 rgba(255,252,244,.6),0 6px 18px -10px rgba(60,46,20,.35);
   }
+
+  /* ── CANDLELIT: the dark theme ──────────────────────────────────────────────
+     The same archive after dark. A deep warm walnut / sepia-black ground, warm
+     parchment ink, brass that GLOWS by candlelight, sage tuned to read on dark.
+     Every variable NAME above is preserved (the inline script resolves them) —
+     only VALUES change here. The extra rules below re-clothe the handful of
+     places where the light palette was inlined as raw hex. The toggle sets
+     data-theme="dark" on <html>; that (not the OS default) drives everything. */
+  :root[data-theme="dark"] {
+    --bg:#17120b; --surface:#211a10; --surface2:#2b2114; --ink:#e8dcc0; --muted:#a08f6d;
+    --line:#3a2e1c; --line2:#4a3a22; --accent:#cfa64a; --accent-ink:#1c1408;
+    --brass:#cfa64a; --brass-deep:#e6c67d; --sage:#86a066; --sage-deep:#b3cc8f;
+    --ok:#7fae6b; --bad:#d98a6a; --warn:#d9a94e; --code:#221a10;
+    --leaf-shadow:0 -1px 0 rgba(255,236,196,.045),0 12px 30px -14px rgba(0,0,0,.72);
+  }
+  /* page ground: a warm candle-glow vignette over sepia-black */
+  :root[data-theme="dark"] body {
+    background:
+      radial-gradient(130% 72% at 50% -8%, #251b0e 0%, transparent 60%),
+      radial-gradient(100% 60% at 100% 0%, #201810 0%, transparent 50%),
+      #17120b;
+    background-attachment:fixed;
+  }
+  /* the hero stays a LIGHT plate (its art + dark-ink wordmark are light in BOTH
+     themes); seat it on the dark bench with a warm rim + soft shadow so the drop
+     into the dark --bg body below reads as an intentional mounted plate. */
+  :root[data-theme="dark"] .masthead { border-bottom-color:#5a4526; box-shadow:0 16px 34px -20px rgba(0,0,0,.85); }
+  /* status pills / gear sit over the LIGHT art — keep them legible on light */
+  :root[data-theme="dark"] .pill.on { color:#4b5740; }
+  :root[data-theme="dark"] .pill.bad { color:#a6533b; }
+  :root[data-theme="dark"] .gearbtn:hover { color:#7c5e1c; }
+
+  /* card & modal header bars: a lifted, brass-tinted plate instead of light gradient */
+  :root[data-theme="dark"] .answer .ahead,
+  :root[data-theme="dark"] .audit-head,
+  :root[data-theme="dark"] .ob-hero,
+  :root[data-theme="dark"] .pf-head { background:linear-gradient(#2a2114,#211a0f); }
+
+  /* surface2-weight fills (fills first, so wells below can override the upload tile) */
+  :root[data-theme="dark"] .pf-toggle,
+  :root[data-theme="dark"] .hero-tile,
+  :root[data-theme="dark"] .rel.related,
+  :root[data-theme="dark"] .rel.candidate,
+  :root[data-theme="dark"] .rel.unrelated,
+  :root[data-theme="dark"] .rel.unknown { background:#2b2114; }
+
+  /* recessed input wells */
+  :root[data-theme="dark"] .searchbar input,
+  :root[data-theme="dark"] .ob-vault,
+  :root[data-theme="dark"] .hero-up,
+  :root[data-theme="dark"] .ext-chip,
+  :root[data-theme="dark"] .pf-num { background:#151009; }
+  :root[data-theme="dark"] .searchbar input { box-shadow:inset 0 1px 3px rgba(0,0,0,.55); }
+  :root[data-theme="dark"] .searchbar input::placeholder { color:#8a7a58; }
+  :root[data-theme="dark"] .searchbar input:focus { box-shadow:inset 0 1px 3px rgba(0,0,0,.55),0 0 0 3px rgba(207,166,74,.22); }
+
+  /* segmented-control tracks */
+  :root[data-theme="dark"] .seg,
+  :root[data-theme="dark"] .pf-seg { background:#17110a; }
+
+  /* recessed inset panels (cites, side notes, foot chips, code) */
+  :root[data-theme="dark"] .cite,
+  :root[data-theme="dark"] .pair .side,
+  :root[data-theme="dark"] .h-foot a,
+  :root[data-theme="dark"] .h-foot button,
+  :root[data-theme="dark"] .ob-code { background:#1a130a; }
+
+  /* strong ink — headings & titles (were near-black hexes) */
+  :root[data-theme="dark"] .hit .h-title,
+  :root[data-theme="dark"] .finding .f-label,
+  :root[data-theme="dark"] .pair .side a,
+  :root[data-theme="dark"] .ob-vault .v-name,
+  :root[data-theme="dark"] .pf-label,
+  :root[data-theme="dark"] .pf-head h2,
+  :root[data-theme="dark"] .ob-hero h2,
+  :root[data-theme="dark"] .ob-hero p em,
+  :root[data-theme="dark"] .ob-load b,
+  :root[data-theme="dark"] .ob-foot .pf b,
+  :root[data-theme="dark"] .ob-x:hover { color:#efe7ce; }
+
+  /* body prose */
+  :root[data-theme="dark"] .answer .abody,
+  :root[data-theme="dark"] .hit .snip,
+  :root[data-theme="dark"] .refused p,
+  :root[data-theme="dark"] .pair .why,
+  :root[data-theme="dark"] .ob-hero p,
+  :root[data-theme="dark"] .ob-load { color:#dccca8; }
+
+  /* small mono labels (were #5c4f34) — NOT .pill/.gearbtn, which stay over light art */
+  :root[data-theme="dark"] .badge,
+  :root[data-theme="dark"] .cite,
+  :root[data-theme="dark"] .auditbtn,
+  :root[data-theme="dark"] .h-foot a,
+  :root[data-theme="dark"] .h-foot button,
+  :root[data-theme="dark"] .finding .items a { color:#c4b68d; }
+
+  /* inlined-muted text */
+  :root[data-theme="dark"] .seg button,
+  :root[data-theme="dark"] .ctrl-note,
+  :root[data-theme="dark"] .pf-seg button,
+  :root[data-theme="dark"] .ext-chip { color:var(--muted); }
+
+  /* restore state/hover colors the generic labels above would otherwise shadow */
+  :root[data-theme="dark"] .badge.ok { color:var(--ok); }
+  :root[data-theme="dark"] .badge.bad { color:var(--bad); }
+  :root[data-theme="dark"] .seg button[aria-pressed="true"],
+  :root[data-theme="dark"] .pf-seg button.on { color:var(--brass-deep); }
+  :root[data-theme="dark"] .pf-toggle.on { background:var(--sage); }
+  :root[data-theme="dark"] .ext-chip.on { background:var(--sage); color:#f7f1e1; }
+  :root[data-theme="dark"] .cite:hover,
+  :root[data-theme="dark"] .auditbtn:hover,
+  :root[data-theme="dark"] .h-foot a:hover,
+  :root[data-theme="dark"] .h-foot button:hover,
+  :root[data-theme="dark"] .finding .items a:hover,
+  :root[data-theme="dark"] .pair .side a:hover { color:var(--brass-deep); }
+
+  /* highlighted matches glow brass on dark */
+  :root[data-theme="dark"] .hit .snip mark { background:linear-gradient(to bottom, transparent 55%, rgba(214,171,90,.36) 55%); }
+
+  /* the brass action button — a lit ingot on the dark bench */
+  :root[data-theme="dark"] .go { background:linear-gradient(#e6c06a,var(--brass)); border-color:#8a6a1f;
+    box-shadow:0 1px 0 rgba(255,240,205,.22) inset,0 0 20px -6px rgba(207,166,74,.5); }
+  :root[data-theme="dark"] .go:hover { background:linear-gradient(#efcd7a,#d6ac4e); }
+
+  /* the answer card: warm rim-light + brass hairline instead of the light top edge */
+  :root[data-theme="dark"] .answer { box-shadow:0 1px 0 rgba(255,236,196,.05),0 0 0 1px rgba(207,166,74,.07),0 16px 34px -18px rgba(0,0,0,.72); }
+  :root[data-theme="dark"] .finding summary:hover { background:rgba(255,240,205,.04); }
+
+  /* full-screen overlays / modals */
+  :root[data-theme="dark"] .onboard { background:radial-gradient(120% 80% at 50% -10%, rgba(38,30,18,.97), rgba(20,15,9,.99)), var(--bg); }
+  :root[data-theme="dark"] .prefs { background:rgba(8,5,2,.62); }
+  :root[data-theme="dark"] .ob-card { box-shadow:0 1px 0 rgba(255,236,196,.05),0 30px 70px -26px rgba(0,0,0,.78); }
+
   * { box-sizing:border-box; }
   html,body { margin:0; color:var(--ink); font-family:var(--sans); -webkit-font-smoothing:antialiased; }
   body {
@@ -283,6 +416,11 @@
           <button class="auditbtn" id="pf-tour">Open the tour</button></div>
       </div>
       <div class="pf-sec">
+        <p class="pf-title">Appearance</p>
+        <div class="pf-row"><div><div class="pf-label">Theme</div><div class="pf-desc">Daylight is the archivist's bench by day. Candlelit is the same archive after dark — deep walnut, parchment ink, brass by candlelight.</div></div>
+          <div class="pf-seg" id="pf-theme"><button data-t="light">Daylight</button><button data-t="dark">Candlelit</button></div></div>
+      </div>
+      <div class="pf-sec">
         <p class="pf-title">Masthead art</p>
         <div class="hero-grid" id="hero-grid"></div>
         <input type="file" id="art-file" accept="image/*" style="display:none" />
@@ -344,6 +482,11 @@
 const $ = (s) => document.querySelector(s);
 const state = { mode: 'search', ai: false, vault: '' };
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+// --- theme: "candlelit" dark / "daylight" light. data-theme on <html> drives the palette. ---
+function applyTheme(t){ const el=document.documentElement; el.dataset.theme = (t==='dark') ? 'dark' : 'light'; try { localStorage.setItem('cairn_theme', el.dataset.theme); } catch {} }
+// apply the cached choice immediately (before /api/preferences resolves) to avoid a flash
+try { const _t=localStorage.getItem('cairn_theme'); if(_t) document.documentElement.dataset.theme=_t; } catch {}
 
 function obsidianLink(noteRel){
   if(!state.vault) return null;
@@ -449,7 +592,7 @@ const strictLabel = (v) => { v=Number(v); return v<34?'Lenient':v<50?'Relaxed':v
 function applyHero(h){ const img=document.querySelector('.masthead img'); if(img&&h) img.src=heroUrl(h); }
 async function loadPrefs(){
   try { const r=await (await apiFetch('/api/preferences')).json(); PREFS=r.preferences; ALLOWED_EXTS=r.allowed_extensions||[]; EFF_EXTS=r.effective_extensions||[]; } catch { PREFS=null; }
-  if(PREFS){ if(PREFS.hero) applyHero(PREFS.hero); if(PREFS.searchMode) setMode(PREFS.searchMode); }
+  if(PREFS){ applyTheme(PREFS.theme || document.documentElement.dataset.theme || 'light'); if(PREFS.hero) applyHero(PREFS.hero); if(PREFS.searchMode) setMode(PREFS.searchMode); }
 }
 function renderExtChips(){
   const wrap=document.getElementById('pf-exts'); if(!wrap) return;
@@ -489,6 +632,9 @@ async function openPrefs(){
   local.onclick=()=>{ const v=!PREFS.localOnly; local.classList.toggle('on',v); savePref({localOnly:v}); };
   document.querySelectorAll('#pf-mode button').forEach(b=>{ b.classList.toggle('on',b.dataset.m===PREFS.searchMode);
     b.onclick=()=>{ document.querySelectorAll('#pf-mode button').forEach(x=>x.classList.toggle('on',x===b)); savePref({searchMode:b.dataset.m}); setMode(b.dataset.m); }; });
+  const curTheme=PREFS.theme||document.documentElement.dataset.theme||'light';
+  document.querySelectorAll('#pf-theme button').forEach(b=>{ b.classList.toggle('on',b.dataset.t===curTheme);
+    b.onclick=()=>{ document.querySelectorAll('#pf-theme button').forEach(x=>x.classList.toggle('on',x===b)); applyTheme(b.dataset.t); savePref({theme:b.dataset.t}); }; });
   renderExtChips();
 }
 function closePrefs(){ document.getElementById('prefs').classList.remove('show'); }
