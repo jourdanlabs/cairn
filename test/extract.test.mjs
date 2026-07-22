@@ -56,3 +56,22 @@ test('an unreadable PDF is flagged (ok:false), never faked as empty text', () =>
   assert.equal(r.ok, false);
   assert.ok(r.note && /extract/i.test(r.note));
 });
+
+test('a standard-font text PDF extracts (font-aware path, no ToUnicode needed)', () => {
+  const pdf = [
+    '%PDF-1.4',
+    '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj',
+    '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj',
+    '3 0 obj<</Type/Page/Parent 2 0 R/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj',
+    '4 0 obj<</Length 60>>',
+    'stream',
+    'BT /F1 12 Tf (Client records are retained seven years.) Tj ET',
+    'endstream',
+    'endobj',
+    '5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj',
+    '%%EOF',
+  ].join('\n');
+  const r = extractText(Buffer.from(pdf, 'latin1'), '.pdf');
+  assert.equal(r.ok, true);
+  assert.match(r.text, /Client records are retained seven years\./);
+});
