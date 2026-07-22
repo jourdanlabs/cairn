@@ -3,7 +3,7 @@
 // product surface a script doesn't have: a native "Open Vault…" picker that remembers
 // the last vault and reindexes live, a real app menu, and a first-run prompt. Electron
 // lives ONLY here in desktop/ — the CAIRN core stays zero-dependency.
-const { app, BrowserWindow, Menu, dialog, shell } = require("electron");
+const { app, BrowserWindow, Menu, dialog, shell, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
 const { readFileSync, writeFileSync, existsSync, mkdirSync } = require("node:fs");
 const path = require("node:path");
@@ -107,13 +107,17 @@ function createWindow() {
     backgroundColor: "#ece3d0", // parchment, so first paint matches the archive
     title: "CAIRN Studio",
     titleBarStyle: "default",   // a real, draggable macOS titlebar
-    webPreferences: { contextIsolation: true, nodeIntegration: false },
+    webPreferences: { contextIsolation: true, nodeIntegration: false, preload: path.join(__dirname, "preload.js") },
   });
   win.loadURL(url);
   // obsidian:// and external links open in the OS, not inside the app frame.
   win.webContents.setWindowOpenHandler(({ url: u }) => { shell.openExternal(u); return { action: "deny" }; });
   win.webContents.on("will-navigate", (e, u) => { if (!u.startsWith(url)) { e.preventDefault(); shell.openExternal(u); } });
 }
+
+// IPC: the onboarding overlay in the web UI connects a vault through these.
+ipcMain.handle("cairn:use-vault", async (_e, p) => { if (p) await useVault(p); return true; });
+ipcMain.handle("cairn:pick-folder", async () => { await openVaultDialog(); return true; });
 
 app.whenReady().then(async () => {
   buildMenu();

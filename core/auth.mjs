@@ -29,6 +29,7 @@ export function permissionFor(method, path) {
   if (path === '/api/reindex') return 'reindex';
   if (path.startsWith('/api/connectors')) return 'connectors';
   if (path === '/api/status') return 'report_read';
+  if (path === '/api/obsidian-vaults') return 'report_read';
   return null; // non-API (static) — handled by the server, not gated here
 }
 

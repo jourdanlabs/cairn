@@ -164,6 +164,37 @@
   .muted { color:var(--muted); }
   footer { color:var(--muted); font:500 11px var(--mono); letter-spacing:.08em; margin-top:44px; text-align:center; text-transform:uppercase; }
   footer::before { content:"❦ "; color:var(--sage); }
+
+  /* ── onboarding: the "connect your Obsidian" guided tour ── */
+  .onboard { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:24px;
+    background:radial-gradient(120% 80% at 50% -10%, rgba(247,240,222,.97), rgba(236,227,208,.985)), var(--bg); overflow:auto; }
+  .onboard.show { display:flex; }
+  .ob-card { width:min(640px,95vw); background:var(--surface); border:1px solid var(--line2); border-radius:6px;
+    box-shadow:0 1px 0 rgba(255,252,244,.6),0 26px 64px -26px rgba(70,46,18,.55); overflow:hidden; animation:leafIn .45s ease-out both; }
+  .ob-hero { padding:26px 30px 18px; background:linear-gradient(#f7f0df,#f2ead6); border-bottom:1px solid var(--line); }
+  .ob-eyebrow { font:600 10.5px var(--mono); letter-spacing:.18em; text-transform:uppercase; color:var(--brass-deep); margin:0 0 8px; }
+  .ob-hero h2 { font:600 29px/1.05 var(--serif); color:#241d10; margin:0 0 9px; letter-spacing:.01em; }
+  .ob-hero p { font:400 14.5px/1.55 var(--serif); color:#4a3f28; margin:0; max-width:54ch; }
+  .ob-hero p em { font-style:italic; color:#241d10; }
+  .ob-body { padding:20px 30px 6px; }
+  .ob-step { font:600 10.5px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--brass-deep); margin:0 0 12px; }
+  .ob-vaults { display:flex; flex-direction:column; gap:9px; }
+  .ob-vault { display:flex; align-items:center; gap:13px; width:100%; text-align:left; cursor:pointer; font-family:var(--sans);
+    background:#fbf6ea; border:1px solid var(--line2); border-radius:4px; padding:13px 15px; transition:border-color .12s, transform .05s; }
+  .ob-vault:hover { border-color:var(--brass); }
+  .ob-vault:active { transform:translateY(1px); }
+  .ob-vault .glyph { width:26px; height:26px; flex:0 0 auto; }
+  .ob-vault .v-name { font:600 15.5px var(--serif); color:#2b2415; }
+  .ob-vault .v-path { font:400 11px var(--mono); color:var(--muted); margin-top:2px; word-break:break-all; }
+  .ob-vault .v-go { margin-left:auto; font:600 10px var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--brass-deep); white-space:nowrap; }
+  .ob-browse { margin-top:13px; }
+  .ob-none { font:italic 400 13.5px/1.55 var(--serif); color:var(--muted); padding:4px 0 2px; }
+  .ob-load { font:400 15px var(--serif); color:#4a3f28; padding:22px 0; text-align:center; }
+  .ob-load b { color:#241d10; font-weight:600; }
+  .ob-foot { padding:15px 30px 22px; display:flex; gap:16px 20px; flex-wrap:wrap; border-top:1px solid var(--line); margin-top:12px; }
+  .ob-foot .pf { font:400 12.5px var(--serif); color:var(--muted); }
+  .ob-foot .pf b { color:#33291a; font-weight:600; }
+  .ob-code { font:500 11px var(--mono); background:#f2ead6; border:1px solid var(--line); border-radius:2px; padding:1px 5px; color:#4a3f28; word-break:break-all; }
 </style>
 </head>
 <body>
@@ -179,6 +210,22 @@
       <div class="ref">Ref · Knowledge Integrity · Local</div>
     </div>
   </header>
+
+  <div id="onboard" class="onboard" role="dialog" aria-modal="true" aria-label="Connect your knowledge">
+    <div class="ob-card">
+      <div class="ob-hero">
+        <p class="ob-eyebrow">Welcome to CAIRN</p>
+        <h2>Let's connect your knowledge.</h2>
+        <p>CAIRN reads your notes and answers <em>only</em> what it can prove — a citation for every claim, a receipt for every answer, and a refusal instead of a guess. It runs entirely on this machine; nothing leaves.</p>
+      </div>
+      <div class="ob-body" id="ob-body"><div class="ob-load">Looking for your vaults…</div></div>
+      <div class="ob-foot">
+        <span class="pf"><b>Cite-or-refuse</b> — proof, or "Not in your vault"</span>
+        <span class="pf"><b>Receipts</b> — a hash for every answer</span>
+        <span class="pf"><b>Integrity</b> — score your whole corpus</span>
+      </div>
+    </div>
+  </div>
 
   <div class="wrap">
     <div class="instrument">
@@ -268,6 +315,44 @@ function apiFetch(url, opts={}){
   return fetch(url, Object.assign({}, opts, { headers:h }));
 }
 
+// --- onboarding: guided "connect your Obsidian" tour (shown when no vault is loaded) ---
+const isDesktop = () => Boolean(window.cairnDesktop && window.cairnDesktop.isDesktop);
+const VGLYPH = `<svg class="glyph" viewBox="0 0 32 32"><g fill="#9a742a"><ellipse cx="16" cy="24" rx="9" ry="3.4"/><ellipse cx="16" cy="17.5" rx="6.6" ry="2.9"/><ellipse cx="16" cy="12" rx="4.6" ry="2.3"/><ellipse cx="16" cy="7.4" rx="2.7" ry="1.7"/></g></svg>`;
+function hideOnboarding(){ const ov=document.getElementById('onboard'); if(ov) ov.classList.remove('show'); }
+async function showOnboarding(){
+  const ov=document.getElementById('onboard'), body=document.getElementById('ob-body');
+  ov.classList.add('show');
+  let list=[];
+  try { list=(await (await apiFetch('/api/obsidian-vaults')).json()).vaults||[]; } catch {}
+  const desktop=isDesktop();
+  let html=`<p class="ob-step">${desktop?'Choose a vault to index':'Connect a vault'}</p>`;
+  if(list.length){
+    html+=`<div class="ob-vaults">`+list.map(v=>`<button class="ob-vault" data-path="${esc(v.path)}">${VGLYPH}
+      <span><span class="v-name">${esc(v.name)}</span><div class="v-path">${esc(v.path)}</div></span>
+      <span class="v-go">${desktop?'Connect →':'Copy path'}</span></button>`).join('')+`</div>`;
+  } else {
+    html+=`<div class="ob-none">No Obsidian vaults found on this machine — ${desktop?'browse for any folder of notes below.':'point CAIRN at a folder of notes.'}</div>`;
+  }
+  if(desktop){
+    html+=`<div class="ob-browse"><button class="auditbtn" id="ob-browse">Browse for a folder…</button></div>`;
+  } else {
+    html+=`<div class="ob-none" style="margin-top:11px">In the browser, set <span class="ob-code">VAULT_DIR</span> in your <span class="ob-code">.env</span>${list.length?' (copy one above)':''} and restart <span class="ob-code">node server.mjs</span>.</div>`;
+  }
+  body.innerHTML=html;
+  body.querySelectorAll('.ob-vault').forEach(b=>b.onclick=()=>onVaultPick(b));
+  const br=document.getElementById('ob-browse'); if(br) br.onclick=()=>window.cairnDesktop.pickFolder();
+}
+async function onVaultPick(btn){
+  const path=btn.dataset.path;
+  if(isDesktop()){
+    document.getElementById('ob-body').innerHTML=`<div class="ob-load">Connecting <b>${esc(path.split('/').pop())}</b> — indexing your notes…<br><span class="muted" style="font-size:12px">This can take a moment on first run.</span></div>`;
+    try { await window.cairnDesktop.useVault(path); } catch(e){ /* the window reloads on success */ }
+  } else {
+    try { await navigator.clipboard.writeText(path); } catch {}
+    const go=btn.querySelector('.v-go'); const t=go.textContent; go.textContent='Copied ✓'; setTimeout(()=>go.textContent=t,1400);
+  }
+}
+
 // --- status ---
 apiFetch('/api/status').then(async r=>{
   if(r.status===401 || r.status===403){
@@ -281,8 +366,8 @@ apiFetch('/api/status').then(async r=>{
   if(!s) return;
   state.ai = s.ai; state.vault = s.vault_name || '';
   const p = $('#status');
-  if(!s.ready){ p.textContent='no vault — set VAULT_DIR'; p.className='pill bad'; }
-  else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; }
+  if(!s.ready){ p.textContent='no vault yet'; p.className='pill bad'; showOnboarding(); }
+  else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; hideOnboarding(); }
   if(s.auth==='closed'){ p.title='closed mode — click to change API key'; p.style.cursor='pointer'; p.onclick=setApiKey; }
   state.embedded = s.embedded;
   $('#foot-ai').textContent = `${s.search_mode||'lexical'} · Ask ${s.ai?'on':'off'}`;

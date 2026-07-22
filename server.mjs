@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { readFileSync, existsSync, watch } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { homedir } from 'node:os';
 import { dirname, join, extname, normalize, basename } from 'node:path';
 
 import { buildIndex, indexDocuments } from './lib/index.mjs';
@@ -74,6 +75,26 @@ function connectorConfig(name) {
 function send(res, status, body, type = 'application/json') {
   res.writeHead(status, { 'content-type': type, 'cache-control': 'no-store' });
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
+}
+
+// Read Obsidian's own vault registry so onboarding can offer the user their existing
+// vaults with one click. Read-only, best-effort; returns existing dirs, newest first.
+function obsidianConfigPath() {
+  const home = homedir();
+  if (process.platform === 'darwin') return join(home, 'Library', 'Application Support', 'obsidian', 'obsidian.json');
+  if (process.platform === 'win32') return join(process.env.APPDATA || join(home, 'AppData', 'Roaming'), 'obsidian', 'obsidian.json');
+  return join(home, '.config', 'obsidian', 'obsidian.json');
+}
+function readObsidianVaults() {
+  try {
+    const p = obsidianConfigPath();
+    if (!existsSync(p)) return [];
+    const j = JSON.parse(readFileSync(p, 'utf8'));
+    return Object.values(j.vaults || {})
+      .filter((v) => v && v.path && existsSync(v.path))
+      .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+      .map((v) => ({ path: v.path, name: basename(v.path) }));
+  } catch { return []; }
 }
 async function readBody(req) {
   const chunks = [];
@@ -164,6 +185,12 @@ const server = createServer(async (req, res) => {
     // Ungated liveness probe (load balancers / k8s) — no sensitive detail leaks.
     if (req.method === 'GET' && reqPath === '/api/health') {
       return send(res, 200, { ok: true, ready: Boolean(INDEX) });
+    }
+
+    // Onboarding: auto-detect the user's Obsidian vaults (read Obsidian's own vault
+    // list). Read-only; used by the desktop app's "connect your Obsidian" tour.
+    if (req.method === 'GET' && reqPath === '/api/obsidian-vaults') {
+      return send(res, 200, { vaults: readObsidianVaults(), current: VAULT_DIR || null });
     }
 
     if (req.method === 'GET' && req.url === '/api/status') {
