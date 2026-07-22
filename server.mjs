@@ -5,7 +5,7 @@
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { readFileSync, existsSync, watch, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, watch, mkdirSync, writeFileSync, readdirSync, appendFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { dirname, join, extname, normalize, basename } from 'node:path';
@@ -18,9 +18,9 @@ import { modelEnabled, embeddingsEnabled } from './lib/model.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
 import { integrityReport } from './lib/integrity.mjs';
-import { makeAuth, permissionFor } from './core/auth.mjs';
+import { makeAuth, permissionFor, auditRecord } from './core/auth.mjs';
 import { Ledger } from './core/ledger.mjs';
-import { runCycle, consoleSink, fileSink, webhookSink } from './core/surveillance.mjs';
+import { runCycle, startSurveillance, consoleSink, fileSink, webhookSink } from './core/surveillance.mjs';
 import { getConnector, listConnectors, collectDocuments } from './connectors/connector.mjs';
 import './connectors/filesystem.mjs'; // self-registers "filesystem"
 import './connectors/confluence.mjs'; // self-registers "confluence"
@@ -63,7 +63,13 @@ const STATE_PATH = join(__dir, '.cairn', 'surveillance.json');
 const PREFS_PATH = join(__dir, '.cairn', 'preferences.json');
 const USER_ART_DIR = join(__dir, '.cairn', 'art');
 const HERO_DIR = join(PUBLIC, 'art', 'heroes');
-const PREFS_DEFAULTS = { hero: 'manuscript', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82, extensions: null };
+const PREFS_DEFAULTS = { hero: 'manuscript', theme: 'light', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82, extensions: null, surveillanceIntervalMin: 0 };
+// Who-did-what access log: every gated request appends a record here (tamper-plain
+// JSONL, distinct from the receipt ledger). Powers GET /api/access-log for auditors.
+const ACCESS_LOG = join(__dir, '.cairn', 'access.jsonl');
+function logAccess(rec) {
+  try { mkdirSync(dirname(ACCESS_LOG), { recursive: true }); appendFileSync(ACCESS_LOG, JSON.stringify(rec) + '\n'); } catch { /* best effort */ }
+}
 // Every file type CAIRN can index. Markdown/text are read directly; Office/PDF/RTF go
 // through the zero-dep extractors. `extensions: null` means "use the env INDEX_EXT default".
 const ALLOWED_EXTS = ['.md', '.markdown', '.txt', '.text', '.log', '.csv', '.tsv', '.rtf', '.docx', '.pptx', '.xlsx', '.pdf'];
@@ -212,6 +218,7 @@ const server = createServer(async (req, res) => {
     const perm = permissionFor(req.method, reqPath);
     if (perm) {
       const g = await AUTH.gate(req, perm);
+      logAccess(auditRecord({ principal: g.principal, method: req.method, path: reqPath, permission: perm, allowed: g.ok, status: g.status }));
       if (!g.ok) return send(res, g.status, { error: g.reason });
     }
 
@@ -234,6 +241,8 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req).catch(() => ({}));
       const p = body.preferences || body || {};
       if (typeof p.hero === 'string') PREFS.hero = p.hero.slice(0, 200);
+      if (p.theme === 'light' || p.theme === 'dark') PREFS.theme = p.theme;
+      if (Number.isFinite(p.surveillanceIntervalMin)) PREFS.surveillanceIntervalMin = Math.max(0, Math.min(10080, Math.round(p.surveillanceIntervalMin)));
       if (Number.isFinite(p.strictness)) PREFS.strictness = Math.max(0, Math.min(1, p.strictness));
       if (Number.isFinite(p.staleDays)) PREFS.staleDays = Math.max(1, Math.min(3650, Math.round(p.staleDays)));
       if (p.searchMode === 'search' || p.searchMode === 'ask') PREFS.searchMode = p.searchMode;
@@ -370,6 +379,14 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { ...LEDGER.verify(), path: '.cairn/ledger.jsonl' });
     }
 
+    // Access log: the who-did-what request trail (most recent first).
+    if (req.method === 'GET' && reqPath === '/api/access-log') {
+      let lines = [];
+      try { lines = readFileSync(ACCESS_LOG, 'utf8').trim().split('\n').filter(Boolean); } catch { /* none yet */ }
+      const records = lines.slice(-500).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean).reverse();
+      return send(res, 200, { count: lines.length, records });
+    }
+
     // Compliance evidence bundle: current integrity posture + the full sealed
     // receipt chain + its verification. This is the artifact an auditor asks for.
     if (req.method === 'GET' && reqPath === '/api/compliance/export') {
@@ -475,6 +492,18 @@ async function start() {
       });
       console.log('watching for changes — edits reindex automatically');
     } catch (e) { console.log('file-watch unavailable:', e.message); }
+  }
+
+  // Surveillance scheduler: when an interval is configured (pref or env, in minutes),
+  // run the integrity/contradiction cycle in the background and alert on NEW defects.
+  const survMin = PREFS.surveillanceIntervalMin || Number(process.env.CAIRN_SURVEILLANCE_INTERVAL_MIN || 0);
+  if (survMin > 0 && VAULT_DIR) {
+    startSurveillance({
+      intervalMs: survMin * 60_000,
+      reportFn: () => integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: PREFS.staleDays }),
+      statePath: STATE_PATH, sinks: surveillanceSinks, source: VAULT_NAME || 'corpus',
+    });
+    console.log(`surveillance: background cycle every ${survMin} min`);
   }
 }
 start();

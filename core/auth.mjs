@@ -24,6 +24,7 @@ export function permissionFor(method, path) {
   if (path === '/api/contradictions') return 'adjudicate';
   if (path === '/api/audit') return 'audit';
   if (path === '/api/ledger/verify') return 'audit';
+  if (path === '/api/access-log') return 'audit';
   if (path === '/api/compliance/export') return 'audit';
   if (path === '/api/surveillance') return 'surveillance';
   if (path === '/api/reindex') return 'reindex';

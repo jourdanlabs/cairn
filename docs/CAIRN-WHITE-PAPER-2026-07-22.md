@@ -118,7 +118,7 @@ Documents may be marked *controlled* (authoritative) by folder or frontmatter. T
 The integrity score (0–100 with a letter grade) is deliberately conservative and defensible: structural defects incur deterministic penalties; unadjudicated contradiction candidates incur only a light penalty; and a heavy penalty is applied to a controlled-versus-controlled contradiction **only once adjudication confirms it**. The score, its constituent findings, and the contradiction candidates roll into one hashed (`report_sha256`) artifact.
 
 ### 6.5 Surveillance over time
-Surveillance snapshots the integrity state, diffs it against the prior sealed baseline, and alerts on **new** defects and newly confirmed contradictions only — the first run is a silent baseline — via webhook, file, or SIEM sinks. (In the current build this executes on demand per request; an interval scheduler is implemented but not yet wired to run as a background loop — see §11.)
+Surveillance snapshots the integrity state, diffs it against the prior sealed baseline, and alerts on **new** defects and newly confirmed contradictions only — the first run is a silent baseline — via webhook, file, or SIEM sinks. It runs on demand and, when an interval is configured, on a background scheduler the server starts at boot.
 
 ---
 
@@ -151,7 +151,7 @@ The system is covered by 53 automated tests (`node --test`), spanning the index,
 These are stated deliberately; a smoothed limitations section would contradict the system's own thesis.
 
 - **Customer-environment last mile.** The connectors, SSO hook, and deployment are config-driven and coded to real vendor APIs and fixture-tested, but a live Confluence/SharePoint pull needs the customer's tenant and token, SSO needs the customer's identity provider, and in-perimeter deployment and any external certification are the customer's. These cannot be, and are not claimed to have been, exercised outside that environment.
-- **Scaffolded, not wired.** A per-request access log and an interval surveillance scheduler are implemented but not yet active; access is enforced but per-request access logging is not yet persisted, and surveillance runs on demand rather than on a background loop.
+- **Single-writer state.** The receipt ledger and access log assume one writer per file (§4.4); run one writer per instance.
 - **Ledger semantics.** The chain assumes a single writer per file, and the `ts` field is outside the hash (§4.4).
 - **Contradiction detection yields candidates.** Similarity surfaces candidates; only model adjudication yields a verdict, and adjudication quality is bounded by the configured model.
 - **Not certified.** CAIRN generates the evidence a SOC 2 / model-risk / residency review requires; it is not itself certified, and it does not represent otherwise.
