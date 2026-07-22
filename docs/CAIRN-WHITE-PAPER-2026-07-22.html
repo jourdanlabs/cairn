@@ -1,0 +1,133 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>CAIRN — White Paper</title><style>
+  @page { size: letter; margin: 0.85in 0.8in 0.95in; }
+  :root {
+    --paper:#fdfbf5; --ink:#2b2415; --soft:#6b5f49; --brass:#9a742a; --brass-deep:#7c5e1c;
+    --sage:#5c6a48; --line:#e0d3b4; --line2:#cbb98f;
+    --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif);
+    font-size:10.6pt; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .sheet { max-width:7.1in; margin:0 auto; padding:6px 0 0; }
+  .brandbar { display:flex; align-items:center; gap:8px; border-bottom:1.5px solid var(--brass);
+    padding-bottom:6px; margin-bottom:16px; }
+  .brandbar .mark { width:16px; height:16px; }
+  .brandbar .name { font-family:var(--sans); font-weight:700; letter-spacing:.18em; font-size:9pt; color:var(--brass-deep); text-transform:uppercase; }
+  .brandbar .lab { font-family:var(--sans); font-size:8pt; letter-spacing:.12em; color:var(--soft); margin-left:auto; text-transform:uppercase; }
+  h1 { font-family:var(--serif); font-weight:600; font-size:22pt; line-height:1.12; color:#241d10; margin:2px 0 4px; letter-spacing:.01em; }
+  h3:first-of-type, h1 + h3 { font-family:var(--serif); font-style:italic; font-weight:400; font-size:12.5pt; color:var(--sage); margin:0 0 10px; }
+  h2 { font-family:var(--serif); font-weight:600; font-size:14.5pt; color:var(--brass-deep);
+    margin:20px 0 6px; padding-top:8px; border-top:1px solid var(--line); break-after:avoid; }
+  h3 { font-family:var(--serif); font-weight:600; font-size:11.6pt; color:#33291a; margin:13px 0 4px; break-after:avoid; }
+  h4 { font-family:var(--sans); font-weight:700; font-size:9pt; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); margin:11px 0 3px; }
+  p { margin:0 0 8px; }
+  strong { color:#241d10; }
+  a { color:var(--brass-deep); text-decoration:none; }
+  code { font-family:var(--mono); font-size:8.7pt; background:#f2ead6; border:1px solid var(--line); border-radius:2px; padding:0 3px; color:#4a3f28; }
+  hr { border:0; border-top:1px solid var(--line2); margin:14px 0; }
+  ul,ol { margin:2px 0 9px; padding-left:20px; }
+  li { margin:2px 0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:9.4pt; break-inside:avoid; }
+  th { font-family:var(--sans); font-weight:700; font-size:8pt; letter-spacing:.03em; text-transform:uppercase;
+    text-align:left; color:#4a3f28; background:#f2ead6; border-bottom:1.5px solid var(--line2); padding:6px 8px; }
+  td { padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; font-variant-numeric:tabular-nums; }
+  pre.diagram { font-family:var(--mono); font-size:7.6pt; line-height:1.35; background:#f6efdd; border:1px solid var(--line);
+    border-radius:3px; padding:11px 12px; margin:10px 0; overflow:hidden; white-space:pre; break-inside:avoid; color:#463b24; }
+  /* the status band: a lone paragraph that's just an inline-code run */
+  p > code:only-child { display:block; }
+</style></head>
+<body><div class="sheet"><div class="brandbar"><svg class="mark" viewBox="0 0 32 32"><g fill="#9a742a"><ellipse cx="16" cy="24" rx="9" ry="3.4"/><ellipse cx="16" cy="17.5" rx="6.6" ry="2.9"/><ellipse cx="16" cy="12" rx="4.6" ry="2.3"/><ellipse cx="16" cy="7.4" rx="2.7" ry="1.7"/></g></svg><span class="name">CAIRN</span><span class="lab">JourdanLabs · Knowledge Integrity</span></div>
+<h1>CAIRN: Provenance and Integrity for the Regulated Knowledge Base</h1>
+<h3>A Zero-Dependency, Local-First System for Cite-or-Refuse Answering, Tamper-Evident Receipts, and Corpus-Level Contradiction Surveillance</h3>
+<p><strong>JourdanLabs Technical White Paper · Version 1.0 · July 2026</strong></p>
+<p><strong>Leland Jourdan II</strong>, Founder &amp; Chief Architect, JourdanLabs · <code>leland@jourdanlabs.com</code></p>
+<hr/>
+<h2>Abstract</h2>
+<p><strong>Background.</strong> In regulated firms, the internal knowledge base functions as a <em>control surface</em>: policies, procedures, and control narratives are the mechanism by which staff — and, increasingly, AI assistants — determine correct action. This surface degrades along four axes: internal inconsistency, staleness, ungrounded retrieval, and un-auditability. Retrieval-augmented AI assistants layered onto such a corpus do not mitigate these failures; they amplify their consequences by producing fluent, confident answers with no provenance and no artifact tying an answer to its source.</p>
+<p><strong>Problem.</strong> Existing tools optimize for the wrong question. Enterprise search optimizes <em>findability</em>; document-AI assistants optimize <em>fluency</em>. Neither verifies that the corpus agrees with itself, and neither emits a verifiable record of where a given answer came from. The gap is not retrieval quality — it is <strong>provenance and integrity</strong>.</p>
+<p><strong>Approach.</strong> CAIRN is a zero-runtime-dependency, local-first system built on three mechanisms: (i) <em>cite-or-refuse</em> answering in which a confidence gate refuses weak matches before any generative model is invoked, so the model cannot hallucinate to fill a gap; (ii) a <em>hash-chained receipt ledger</em> that seals every answer and every refusal into an append-only, tamper-evident record with per-source SHA-256 content hashes; and (iii) <em>corpus-level integrity surveillance</em> combining a deterministic structural audit with embedding-based overlap detection and model adjudication of contradiction, duplication, or relation, rolled into a single hashed integrity artifact.</p>
+<p><strong>Properties.</strong> Determinism where the corpus is audited; a receipt on every answer and every refusal; tamper-evidence by construction; and full local operation in which the corpus never leaves the machine. The implementation carries no third-party runtime dependencies (Node.js built-ins only), is covered by 53 automated tests, and was independently re-executed — not accepted on assertion — including a tamper-evidence stress test in which three distinct edits to a sealed record were each detected with the correct cause.</p>
+<p><strong>Status.</strong> Code-complete for all capabilities exercisable without a customer's environment. Capabilities that require the customer's own systems (a live tenant token, an identity provider, in-perimeter deployment, external certification) are config-driven and coded to real vendor APIs but are, by definition, not run here — a boundary stated explicitly rather than obscured.</p>
+<p><strong>Keywords.</strong> Knowledge integrity, answer provenance, retrieval-augmented generation, cite-or-refuse, tamper-evident receipts, contradiction detection, regulated AI, local-first systems, model-risk governance.</p>
+<hr/>
+<h2>1. Introduction</h2>
+<h3>1.1 The knowledge base as a control surface</h3>
+<p>In a regulated institution, documentation is not an incidental artifact — it is the substrate of control. A control narrative states how a risk is mitigated; a procedure states how a task is performed; a policy states what is permitted. When staff act, they act on what the knowledge base tells them. The correctness of the institution's behavior is therefore bounded by the <em>integrity</em> of that corpus: whether it is internally consistent, current, and reachable, and whether an action can be traced to the source that informed it.</p>
+<h3>1.2 Why AI assistants amplify rather than mitigate</h3>
+<p>Layering a retrieval-augmented assistant onto the corpus improves <em>access latency</em> but degrades <em>auditability</em>. A conventional assistant retrieves the nearest-sounding passages and generates a fluent synthesis. Two failure modes follow directly. First, fluency is mistaken for correctness: an answer drawn from a superseded or incorrect document is indistinguishable, in tone, from a correct one. Second, the answer carries no artifact: when a regulator later asks how a decision was informed, there is no record binding the decision to a source. The more heavily the institution relies on "chat with your documents," the larger this un-auditable surface grows — and it grows fastest in exactly the environments least able to absorb the resulting risk.</p>
+<h3>1.3 The provenance gap</h3>
+<p>The deficiency is not addressed by better retrieval. A more accurate retriever still produces an un-receipted answer and still says nothing about whether the corpus contradicts itself. What is missing is a system whose <em>output contract</em> is provenance: every answer either proves its sourcing or refuses, and the corpus itself is continuously interrogated for internal conflict. This reframes the problem from "answer the question well" to "answer only what can be proven, and know whether the knowledge base agrees with itself."</p>
+<h3>1.4 Contributions</h3>
+<p>This paper describes CAIRN, a system contributing: (1) a <em>refusal-first</em> answering discipline with a pre-generation confidence gate; (2) a <em>hash-chained receipt</em> for every answer and refusal, with per-source content hashing; (3) a <em>deterministic-plus-adjudicated</em> integrity model that separates cheap structural defects from model-confirmed contradictions; (4) an in-process approximate-nearest-neighbor design that scales contradiction candidate-generation without an external vector store; and (5) an engineering posture — zero runtime dependencies, local-first, tamper-evident — chosen so the system is deployable inside a regulated perimeter and auditable end-to-end. We also state, explicitly, the boundaries the system does not cross.</p>
+<hr/>
+<h2>2. Threat Model and Design Principles</h2>
+<p>CAIRN's design assumes an adversary is not primarily malicious but <em>entropic</em>: the corpus drifts, documents supersede one another silently, and well-intentioned answers are sourced from the wrong place. It additionally assumes an auditor who will later ask, adversarially, to reconstruct how an answer was produced and whether any record was altered after the fact. Five principles follow.</p>
+<ol><li><strong>Refuse over guess.</strong> The confidence gate rejects weak retrievals <em>before</em> a generative model is invoked. "Not in your vault" is a first-class, receipted outcome.</li><li><strong>Everything checkable.</strong> Every answer and report re-verifies from its hash; there is no black box the customer cannot audit.</li><li><strong>Deterministic where it can be.</strong> Retrieval ranking, the structural audit, and the integrity score are reproducible given the same index.</li><li><strong>Local by default.</strong> Corpus and models can run fully air-gapped; nothing leaves the perimeter unless explicitly configured to.</li><li><strong>State the boundary.</strong> Where a capability cannot be exercised without the customer's environment, that is documented, not implied to be complete.</li></ol>
+<hr/>
+<h2>3. System Architecture</h2>
+<pre class="diagram"> sources ──► CONNECTORS ──► INGESTION ──► STORES ──► ENGINES ──► API ──► clients
+ (filesystem,  (normalized    (parse →      (docs,     (hybrid       (REST,
+  Confluence,   Document       chunk →       vectors,   retrieval,    RBAC/OIDC,
+  REST)         model)         index)        receipt    grounded      audit,
+                                             ledger,    answer,       compliance
+                                             reports)   audit,        export)
+                                                        surveillance)</pre>
+<ul><li><strong>Connectors</strong> normalize any source into one <code>Document</code> shape, so ingestion, stores, and engines never depend on where a document originated.</li><li><strong>Ingestion</strong> parses frontmatter, headings, <code>#tags</code>, and <code>[[wikilinks]]</code>, chunks by heading, and builds an in-memory index driving lexical (BM25) and, when embeddings are available, hybrid retrieval.</li><li><strong>Stores</strong> comprise the document/chunk index, an optional vector index, and a hash-chained receipt ledger persisted on disk.</li><li><strong>Engines</strong> provide hybrid retrieval, grounded answering, the deterministic audit, contradiction surveillance, and integrity scoring.</li><li><strong>API</strong> exposes the above over REST with role-based authorization and full request gating.</li></ul>
+<p>The implementation is pure Node.js (≥18) using built-ins only, with <strong>no third-party runtime dependencies</strong>: there is nothing to <code>npm install</code>, patch, or supply-chain-audit, and the system starts from a clean checkout with <code>node server.mjs</code>.</p>
+<hr/>
+<h2>4. The Receipt and the Hash-Chained Ledger</h2>
+<h3>4.1 Canonical hashing</h3>
+<p>All hashing operates over a canonical JSON serialization in which object keys are sorted recursively and <code>undefined</code> values are dropped, so two payloads differing only in key order hash identically. Content hashes are SHA-256.</p>
+<h3>4.2 The answer/report receipt</h3>
+<p>Every answer and every refusal emits a receipt recording the question, the verdict (<code>GROUNDED</code> or <code>REFUSED_UNGROUNDED</code>), each cited source <strong>content-hashed with SHA-256</strong> (a proof of exactly what the source said at answer time), the model, the confidence, the index build time, a timestamp, and a <code>receipt_sha256</code> over the whole. The integrity report emits an analogous <code>report_sha256</code>. Both are downloadable JSON artifacts.</p>
+<h3>4.3 The ledger seal</h3>
+<p>Receipts are appended to a hash-chained, append-only log ("the LUNA pattern"). Each entry binds its sequence number, the prior entry's hash, its kind, and the canonical payload:</p>
+<pre class="diagram">entry_hash = SHA256( seq | prev_hash | kind | canonicalJSON(payload) )</pre>
+<p>A verification pass walks the chain, recomputing each seal and checking prior-hash linkage; any edit to a hashed field of any past entry — sequence, linkage, or payload — and any deletion or reordering of a line is detected. The verify result reports the first broken index and the reason.</p>
+<h3>4.4 Honest properties of the ledger</h3>
+<p>Two properties are stated plainly. First, the human-readable <code>ts</code> timestamp is deliberately excluded from the hash (so reproducible hashes do not require a fixed clock); consequently a change to <code>ts</code> alone is the one edit the chain does not flag. Second, the chain is correct for a single writer; two processes appending to the same ledger file concurrently can fork it, so deployments run one writer per ledger. Neither property is hidden; both are documented where the mechanism is described.</p>
+<hr/>
+<h2>5. Grounded, Cite-or-Refuse Answering</h2>
+<p>Retrieval combines lexical BM25 with semantic similarity when an embedding model is configured (hybrid), and lexical-only otherwise; the mode is surfaced to the user rather than assumed. A <strong>confidence gate</strong> evaluates retrieval strength <em>before</em> any generative call. On a weak or empty result the system refuses — returning the closest passages and a receipt — and never invokes the model to fill the gap. On a sufficient result the model is constrained to answer from the retrieved contexts, with citations; the answer, its citations, and its receipt are returned together.</p>
+<p>Refusal is a designed outcome, not an error path: a wrong-but-confident answer is precisely the failure the system exists to prevent, so a receipted "Not in your vault" is treated as success. Because both branches are receipted, the <em>rate and provenance of refusals</em> are themselves auditable.</p>
+<hr/>
+<h2>6. Integrity and Contradiction Surveillance</h2>
+<h3>6.1 Deterministic structural audit</h3>
+<p>A deterministic pass identifies orphaned notes (no inbound or outbound links), broken <code>[[links]]</code>, stale notes (beyond a staleness horizon with open tasks or draft markers), duplicate titles (retrieval ambiguity), stubs, and untagged notes. These are reproducible given the same index and carry deterministic penalties.</p>
+<h3>6.2 Overlap detection and adjudication</h3>
+<p>Embedding-based overlap detection surfaces cross-note chunk pairs above a similarity threshold, deduplicated to the strongest pair per note-pair. Where a generative model is configured, an adjudication step classifies each candidate as <strong>contradict</strong>, <strong>duplicate</strong>, <strong>related</strong>, or <strong>unrelated</strong>. The system is explicit that similarity yields <em>candidates</em>, and only adjudication yields a <em>verdict</em>.</p>
+<h3>6.3 Controlled sources</h3>
+<p>Documents may be marked <em>controlled</em> (authoritative) by folder or frontmatter. The integrity report reports controlled coverage, and same-topic overlaps between two controlled documents are escalated as <strong>review priorities</strong> — a genuine conflict between two authoritative policies is the costliest class of defect and is surfaced first.</p>
+<h3>6.4 Scoring philosophy</h3>
+<p>The integrity score (0–100 with a letter grade) is deliberately conservative and defensible: structural defects incur deterministic penalties; unadjudicated contradiction candidates incur only a light penalty; and a heavy penalty is applied to a controlled-versus-controlled contradiction <strong>only once adjudication confirms it</strong>. The score, its constituent findings, and the contradiction candidates roll into one hashed (<code>report_sha256</code>) artifact.</p>
+<h3>6.5 Surveillance over time</h3>
+<p>Surveillance snapshots the integrity state, diffs it against the prior sealed baseline, and alerts on <strong>new</strong> defects and newly confirmed contradictions only — the first run is a silent baseline — via webhook, file, or SIEM sinks. (In the current build this executes on demand per request; an interval scheduler is implemented but not yet wired to run as a background loop — see §11.)</p>
+<hr/>
+<h2>7. Scale</h2>
+<p>The naive contradiction candidate-generation pass is an O(n²) all-pairs cosine comparison, which becomes expensive on large corpora. Above a threshold, CAIRN substitutes an in-process approximate-nearest-neighbor index using random-projection locality-sensitive hashing (SimHash), which compares only vectors likely to be neighbors, entirely in-process with no external vector database. On a synthetic 20,000-vector, 768-dimension benchmark the index completed candidate-generation in roughly two seconds versus an extrapolated brute-force baseline of minutes — an approximate <strong>~76× reduction, measured on a 2,000-pair subset and scaled</strong> (the benchmark labels this figure "extrapolated"; it should never be quoted without that qualifier) — at 98.3% recall and 100% precision of returned pairs (every returned pair is exact-cosine-verified before it is kept). An exact-parity test asserts the ANN path recovers the same contradiction candidates as the brute-force scan on a planted set, so the scale layer changes performance, not results.</p>
+<hr/>
+<h2>8. Access Control, Deployment, and Residency</h2>
+<p>Authorization is role-based — viewer, analyst, admin — with deny-by-default on unmapped routes. Authentication accepts API keys and, for enterprise SSO, an OIDC-ready <code>verifyBearer(token)</code> hook that validates the firm's identity provider's token and returns a principal with no code change. In the single-user local default (no keys configured) the system runs in open mode; configuring keys or a verifier locks it to authenticated, role-checked access. The server binds loopback by default; LAN exposure is explicit opt-in. Deployment is a non-root container with no dependencies to patch and writable state confined to a single directory; an ungated liveness endpoint supports orchestration probes while every other route is gated in closed mode. Because models and corpus can run fully local, the system is air-gap capable: nothing leaves the perimeter unless an external model endpoint is deliberately configured.</p>
+<hr/>
+<h2>9. Compliance and Controls Mapping</h2>
+<p>CAIRN is a <strong>control the customer operates</strong>, not a certification — certification is a property of the operated system, not of a component. The system maps to common control families as follows: <em>data residency and confidentiality</em> (local-by-default, air-gap capable); <em>access control</em> (RBAC, API keys, OIDC-ready, deny-by-default); <em>audit-trail and evidence integrity</em> (the hash-chained receipt ledger and its verification endpoint, plus an auditor evidence-bundle export combining the current integrity posture, the full sealed chain, and its verification); <em>AI-output traceability</em> (cite-or-refuse with per-answer receipts, relevant to model-risk hygiene); and <em>ongoing monitoring</em> (the deterministic integrity report and new-defect surveillance). The control-mapping document is cited to code and makes no false certification claims.</p>
+<hr/>
+<h2>10. Verification Methodology</h2>
+<p>The system is covered by 53 automated tests (<code>node --test</code>), spanning the index, hybrid search, the deterministic audit, integrity scoring, the receipt ledger, and the connector/ingestion path. Consistent with the JourdanLabs three-leg discipline, the results were <strong>independently re-executed rather than accepted on assertion</strong>: an isolated instance was booted in closed mode and subjected to an authorization probe battery (unauthenticated 401; wrong-key 401; viewer denied admin routes; health ungated and non-leaking; a nonsense question refused and receipted as <code>REFUSED_UNGROUNDED</code>). The receipt ledger was then attacked three ways on a disposable copy — a payload edit, a chain-link edit, and a line deletion — and each tampering was caught with the correct cause. The scale layer's recall and precision were reproduced, and the ANN-versus-brute-force parity confirmed.</p>
+<hr/>
+<h2>11. Limitations and Honest Boundaries</h2>
+<p>These are stated deliberately; a smoothed limitations section would contradict the system's own thesis.</p>
+<ul><li><strong>Customer-environment last mile.</strong> The connectors, SSO hook, and deployment are config-driven and coded to real vendor APIs and fixture-tested, but a live Confluence/SharePoint pull needs the customer's tenant and token, SSO needs the customer's identity provider, and in-perimeter deployment and any external certification are the customer's. These cannot be, and are not claimed to have been, exercised outside that environment.</li><li><strong>Scaffolded, not wired.</strong> A per-request access log and an interval surveillance scheduler are implemented but not yet active; access is enforced but per-request access logging is not yet persisted, and surveillance runs on demand rather than on a background loop.</li><li><strong>Ledger semantics.</strong> The chain assumes a single writer per file, and the <code>ts</code> field is outside the hash (§4.4).</li><li><strong>Contradiction detection yields candidates.</strong> Similarity surfaces candidates; only model adjudication yields a verdict, and adjudication quality is bounded by the configured model.</li><li><strong>Not certified.</strong> CAIRN generates the evidence a SOC 2 / model-risk / residency review requires; it is not itself certified, and it does not represent otherwise.</li></ul>
+<hr/>
+<h2>12. Related Work</h2>
+<p>Enterprise search platforms optimize findability and rank documents well, but do not verify sources, do not score the corpus for internal conflict, and do not receipt answers. Document-AI assistants optimize fluency and typically operate cloud-side; fluency is not provenance, and a correct-sounding answer from the wrong document remains wrong with no artifact to catch it. Retrieval-augmented-generation plugins ground answers in retrieved chunks but stop there: no pre-generation refusal discipline, no corpus-level integrity score, and no hashed receipt. To our knowledge, no widely deployed system both scores a corpus for internal contradiction and emits a verifiable, per-source-hashed receipt for each answer and refusal.</p>
+<hr/>
+<h2>13. Conclusion</h2>
+<p>CAIRN reframes "chat with your documents" from an answering problem into a provenance-and-integrity problem, and takes the position that in a regulated environment the correct output contract is <em>proof or refusal</em>. It combines a refusal-first confidence gate, a tamper-evident hash-chained receipt on every answer and refusal, and a corpus-level integrity model that separates cheap structural defects from model-confirmed contradictions — implemented with zero runtime dependencies, local-first, and auditable end-to-end. Determinism, receipts, and refusal are structural properties of the implementation rather than aspirational features, which is what makes the system suitable as a control inside a regulated perimeter. Where a capability depends on the customer's own environment, that boundary is named rather than blurred — because a knowledge-integrity tool that overstated its own status would fail its first and most important test.</p>
+<hr/>
+<h2>References</h2>
+<p>[1] JourdanLabs. <em>CAIRN — Positioning.</em> Internal document, 2026. [2] JourdanLabs. <em>CAIRN — Compliance &amp; Controls Mapping.</em> Repository document (<code>docs/COMPLIANCE.md</code>), 2026. [3] JourdanLabs. <em>CAIRN Enterprise — Build Plan.</em> Repository document (<code>docs/ENTERPRISE-PLAN.md</code>), 2026. [4] Robertson, S., Zaragoza, H. <em>The Probabilistic Relevance Framework: BM25 and Beyond.</em> Foundations and Trends in Information Retrieval, 2009. [5] Charikar, M. <em>Similarity Estimation Techniques from Rounding Algorithms.</em> STOC, 2002. (Random-projection LSH / SimHash.)</p>
+<hr/>
+<p><strong>Leland Jourdan II</strong> — Founder &amp; Chief Architect, JourdanLabs · <code>leland@jourdanlabs.com</code> <em>Built by JourdanLabs. We build tools that refuse to bluff.</em></p></div></body></html>

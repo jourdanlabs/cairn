@@ -1,0 +1,84 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>CAIRN — Brief</title><style>
+  @page { size: letter; margin: 0.85in 0.8in 0.95in; }
+  :root {
+    --paper:#fdfbf5; --ink:#2b2415; --soft:#6b5f49; --brass:#9a742a; --brass-deep:#7c5e1c;
+    --sage:#5c6a48; --line:#e0d3b4; --line2:#cbb98f;
+    --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif);
+    font-size:10.6pt; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .sheet { max-width:7.1in; margin:0 auto; padding:6px 0 0; }
+  .brandbar { display:flex; align-items:center; gap:8px; border-bottom:1.5px solid var(--brass);
+    padding-bottom:6px; margin-bottom:16px; }
+  .brandbar .mark { width:16px; height:16px; }
+  .brandbar .name { font-family:var(--sans); font-weight:700; letter-spacing:.18em; font-size:9pt; color:var(--brass-deep); text-transform:uppercase; }
+  .brandbar .lab { font-family:var(--sans); font-size:8pt; letter-spacing:.12em; color:var(--soft); margin-left:auto; text-transform:uppercase; }
+  h1 { font-family:var(--serif); font-weight:600; font-size:22pt; line-height:1.12; color:#241d10; margin:2px 0 4px; letter-spacing:.01em; }
+  h3:first-of-type, h1 + h3 { font-family:var(--serif); font-style:italic; font-weight:400; font-size:12.5pt; color:var(--sage); margin:0 0 10px; }
+  h2 { font-family:var(--serif); font-weight:600; font-size:14.5pt; color:var(--brass-deep);
+    margin:20px 0 6px; padding-top:8px; border-top:1px solid var(--line); break-after:avoid; }
+  h3 { font-family:var(--serif); font-weight:600; font-size:11.6pt; color:#33291a; margin:13px 0 4px; break-after:avoid; }
+  h4 { font-family:var(--sans); font-weight:700; font-size:9pt; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); margin:11px 0 3px; }
+  p { margin:0 0 8px; }
+  strong { color:#241d10; }
+  a { color:var(--brass-deep); text-decoration:none; }
+  code { font-family:var(--mono); font-size:8.7pt; background:#f2ead6; border:1px solid var(--line); border-radius:2px; padding:0 3px; color:#4a3f28; }
+  hr { border:0; border-top:1px solid var(--line2); margin:14px 0; }
+  ul,ol { margin:2px 0 9px; padding-left:20px; }
+  li { margin:2px 0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:9.4pt; break-inside:avoid; }
+  th { font-family:var(--sans); font-weight:700; font-size:8pt; letter-spacing:.03em; text-transform:uppercase;
+    text-align:left; color:#4a3f28; background:#f2ead6; border-bottom:1.5px solid var(--line2); padding:6px 8px; }
+  td { padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; font-variant-numeric:tabular-nums; }
+  pre.diagram { font-family:var(--mono); font-size:7.6pt; line-height:1.35; background:#f6efdd; border:1px solid var(--line);
+    border-radius:3px; padding:11px 12px; margin:10px 0; overflow:hidden; white-space:pre; break-inside:avoid; color:#463b24; }
+  /* the status band: a lone paragraph that's just an inline-code run */
+  p > code:only-child { display:block; }
+</style></head>
+<body><div class="sheet"><div class="brandbar"><svg class="mark" viewBox="0 0 32 32"><g fill="#9a742a"><ellipse cx="16" cy="24" rx="9" ry="3.4"/><ellipse cx="16" cy="17.5" rx="6.6" ry="2.9"/><ellipse cx="16" cy="12" rx="4.6" ry="2.3"/><ellipse cx="16" cy="7.4" rx="2.7" ry="1.7"/></g></svg><span class="name">CAIRN</span><span class="lab">JourdanLabs · Knowledge Integrity</span></div>
+<h1>CAIRN — Technical &amp; Executive Brief</h1>
+<h3>The knowledge-integrity layer for regulated firms</h3>
+<p><strong>JourdanLabs Brief · Version 1.0 · July 2026</strong> <strong>Leland Jourdan II</strong>, Founder &amp; Chief Architect, JourdanLabs · <code>leland@jourdanlabs.com</code></p>
+<p><code>SOFTWARE: WORKING · TESTS: 53/53 · DEPENDENCIES: 0 · RUNS: FULLY LOCAL · INDEPENDENTLY RE-VERIFIED</code></p>
+<hr/>
+<h2>1. The one-sentence version</h2>
+<p>CAIRN surveils a firm's knowledge base for contradiction and staleness, and answers questions <strong>only with what it can prove</strong> — emitting a cryptographic receipt for every answer <em>and</em> every refusal.</p>
+<h2>2. Why this matters now</h2>
+<p>In a regulated firm the knowledge base is not documentation — it is a <strong>control surface</strong>. Policies, procedures, risk memos, and control narratives are how people, and increasingly AI assistants, know what to do. That surface rots in four predictable ways:</p>
+<ul><li><strong>Inconsistent</strong> — two procedures give conflicting instructions and nobody notices.</li><li><strong>Stale</strong> — the authoritative version was superseded, but the old one is still what search returns.</li><li><strong>Ungrounded</strong> — answers get sourced from the nearest-sounding document, not the correct one.</li><li><strong>Un-auditable</strong> — when a regulator asks <em>"how did your people know to do X,"</em> nothing ties the action to the source that informed it.</li></ul>
+<p>Firms are wiring AI assistants directly onto these knowledge bases right now. That does not shrink the problem; it <strong>scales</strong> it — the volume of confident, unsourced, un-auditable answers rises fastest precisely inside the environments least able to absorb the risk. In most industries this is a nuisance. In regulated finance it is a control failure. <strong>The control needs to exist before the incident does.</strong></p>
+<h2>3. The category</h2>
+<p>CAIRN is not enterprise search and not a document chatbot. Those optimize for <em>finding</em> and <em>answering</em>. CAIRN optimizes for <strong>integrity and provenance</strong>: whether the corpus agrees with itself, and whether every answer traces — cryptographically — back to the exact source that produced it. Search asks <em>"what's relevant?"</em> CAIRN asks <em>"can we prove it, and does the knowledge base even agree with itself?"</em></p>
+<h2>4. What it does — three pillars</h2>
+<h3>4.1 Receipted, cite-or-refuse answers</h3>
+<p>Ask a question over the corpus; CAIRN returns an answer <strong>locked to the retrieved notes</strong>. Every claim carries a citation, or the system replies exactly <em>"Not in your vault."</em> A confidence gate refuses weak matches <strong>before the model is ever called</strong>, so the model is never asked to fill a gap it cannot ground. Every answer <em>and</em> every refusal emits a hashed <strong>receipt</strong> containing: the question; the verdict (<code>GROUNDED</code> / <code>REFUSED_UNGROUNDED</code>); each cited source <strong>content-hashed with SHA-256</strong> (proof of exactly what the source said at answer time); the model; the confidence; the index build time; a timestamp; and a <code>receipt_sha256</code>. It downloads as JSON.</p>
+<p>Refusal is treated as a <strong>first-class, receipted outcome</strong> — "Not in your vault" is a feature, not a failure. A wrong-but-confident answer is the exact thing CAIRN is built to prevent.</p>
+<h3>4.2 Contradiction &amp; staleness surveillance</h3>
+<p>A deterministic audit finds the structural rot — orphans, broken <code>[[links]]</code>, stale notes, duplicate titles, stubs, untagged notes — with reproducible penalties. Embedding-based <strong>overlap detection</strong> surfaces note pairs about the same topic, and a model adjudicates whether they <strong>contradict</strong>, <strong>duplicate</strong>, or merely <strong>relate</strong>. This is the part no search engine does: it does not just retrieve the corpus, it interrogates it for internal conflict. Surveillance can re-run and alert only on <strong>new</strong> defects since the last sealed baseline (webhook / file / SIEM sinks).</p>
+<h3>4.3 A hashed knowledge-integrity score</h3>
+<p>One click produces an <strong>Integrity Report</strong>: a 0–100 score and letter grade over the whole corpus, combining the deterministic audit with the contradiction candidates, rolled into a single hashed (<code>report_sha256</code>), downloadable JSON artifact — a regulator-ready snapshot of whether the knowledge base is internally consistent, current, and reachable.</p>
+<p><strong>Controlled sources.</strong> Authoritative documents are marked <em>controlled</em> (by folder or frontmatter). The report shows controlled coverage, and same-topic overlaps between two controlled documents are surfaced as <strong>review priorities</strong> — a genuine conflict between two authoritative policies is the costliest kind, so it is the first to adjudicate. Scoring is deliberately conservative: structural defects carry deterministic penalties; a contradiction is penalized heavily <strong>only once adjudication confirms it</strong>, not on similarity alone.</p>
+<h2>5. How it is built</h2>
+<pre class="diagram"> sources ─► CONNECTORS ─► INGESTION ─► STORES ─► ENGINES ─► API ─► clients
+ (filesystem, (normalized  (parse →     (docs,    (hybrid      (REST,
+  Confluence,  Document      chunk →     vectors,  retrieval,   RBAC,
+  REST)        model)        index)      receipt   grounded     audit)
+                                         ledger,   answer,
+                                         reports)  audit,
+                                                   surveillance)</pre>
+<ul><li><strong>Zero runtime dependencies.</strong> Pure Node.js (≥18), built-ins only — no npm packages to install, patch, or supply-chain-attack. <code>git clone</code> → <code>node server.mjs</code> and it runs; nothing to build.</li><li><strong>Local by default.</strong> The corpus is indexed in memory; nothing leaves the machine unless an external model endpoint is configured. Embeddings and chat can run fully local via Ollama. Grounded search needs no network at all.</li><li><strong>Hash-chained receipt ledger.</strong> Every answer and report is sealed into an append-only log where each entry binds the prior entry's hash — tamper-evident by construction. A verify endpoint recomputes the whole chain.</li><li><strong>Connectors.</strong> A normalized <code>Document</code> model lets any source ingest identically. The filesystem connector is live; a Confluence Cloud connector is coded against the real v2 REST API and fixture-tested. A live pull needs the customer's tenant + token.</li><li><strong>Scale.</strong> Contradiction candidate-generation uses an in-process approximate-nearest-neighbor (LSH) index instead of an O(n²) scan — no external vector database — with an exact-parity test guaranteeing it recovers the same candidates the brute-force scan would.</li><li><strong>Access control.</strong> Role-based (viewer / analyst / admin), API keys, and an OIDC-ready <code>verifyBearer</code> hook to wire a firm's SSO with no code change. Deny-by-default; open (single-user local) mode until keys are configured. Binds loopback by default.</li><li><strong>Compliance pack.</strong> A control-mapping document (cited to code, no false certification claims) and an auditor evidence export bundling the current integrity posture + the full sealed receipt chain + its verification.</li></ul>
+<h2>6. Competitive landscape (honestly)</h2>
+<ul><li><strong>Enterprise search (Glean and peers)</strong> finds documents well. It does not verify them, does not score the corpus for internal conflict, and does not receipt its answers.</li><li><strong>Document AI (Notion AI, Copilot)</strong> answers fluently and cloud-side. Fluency is not provenance; a good answer from the wrong document is still wrong, and there is no artifact proving where it came from.</li><li><strong>RAG plugins</strong> ground answers in retrieved chunks but stop there — no cite-or-refuse discipline, no corpus-level integrity score, no hashed receipt.</li></ul>
+<p>Nobody in the field scores the corpus for internal contradiction, and nobody hands you a signed receipt for the answer. That is the open lane.</p>
+<h2>7. What it is — and is not</h2>
+<p>CAIRN is a <strong>control you operate</strong>, not a certification. It produces the evidence a SOC 2 / model-risk / data-residency review asks for; certification is a property of <em>your</em> operated system, not of a component. It is <strong>not</strong> a chatbot (it refuses rather than improvises), <strong>not</strong> a search bar (retrieval is the input, provenance is the product), and <strong>not</strong> cloud RAG (it runs local; the corpus never leaves the machine).</p>
+<p><strong>Honest boundaries.</strong> The connectors, SSO hook, and deployment are config-driven and coded to real vendor APIs, but the last mile that physically lives in the customer's environment — a live Confluence/SharePoint tenant token, the bank's identity provider, their VPC/on-prem deployment, and any certification — runs on their systems, not ours. Two capabilities are currently <strong>scaffolded but not wired</strong>: a per-request access log and an interval surveillance scheduler (surveillance runs on demand today). The receipt ledger assumes a single writer per file. None of this is smoothed over; it is stated so the buyer knows exactly what they are getting.</p>
+<h2>8. Status &amp; proof</h2>
+<p>CAIRN is code-complete for what can be built and tested without a customer's environment: <strong>53 automated tests passing, zero dependencies</strong>, and independently re-executed rather than taken on trust — including a tamper-evidence stress test that edited a payload, broke a chain link, and deleted a line, all three caught with the correct reason. It ships with two faces: the <strong>zero-dependency server + API</strong> a firm deploys, and a local <strong>desktop Studio</strong> for an individual operator — same core, different audience.</p>
+<h2>9. Roadmap</h2>
+<p>Wire the access log and surveillance scheduler; live connector runs against a customer tenant; SSO against a real IdP; receipt-chain export tooling; and hardened multi-writer ledger semantics. Each ships with tests, and each honest boundary closes only when it is genuinely closed.</p>
+<hr/>
+<p><em>Built by JourdanLabs. We build tools that refuse to bluff.</em></p></div></body></html>

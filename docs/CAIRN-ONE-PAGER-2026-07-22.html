@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><title>CAIRN — One Page</title><style>
+  @page { size: letter; margin: 0.85in 0.8in 0.95in; }
+  :root {
+    --paper:#fdfbf5; --ink:#2b2415; --soft:#6b5f49; --brass:#9a742a; --brass-deep:#7c5e1c;
+    --sage:#5c6a48; --line:#e0d3b4; --line2:#cbb98f;
+    --serif:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+    --mono:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--serif);
+    font-size:10.6pt; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .sheet { max-width:7.1in; margin:0 auto; padding:6px 0 0; }
+  .brandbar { display:flex; align-items:center; gap:8px; border-bottom:1.5px solid var(--brass);
+    padding-bottom:6px; margin-bottom:16px; }
+  .brandbar .mark { width:16px; height:16px; }
+  .brandbar .name { font-family:var(--sans); font-weight:700; letter-spacing:.18em; font-size:9pt; color:var(--brass-deep); text-transform:uppercase; }
+  .brandbar .lab { font-family:var(--sans); font-size:8pt; letter-spacing:.12em; color:var(--soft); margin-left:auto; text-transform:uppercase; }
+  h1 { font-family:var(--serif); font-weight:600; font-size:22pt; line-height:1.12; color:#241d10; margin:2px 0 4px; letter-spacing:.01em; }
+  h3:first-of-type, h1 + h3 { font-family:var(--serif); font-style:italic; font-weight:400; font-size:12.5pt; color:var(--sage); margin:0 0 10px; }
+  h2 { font-family:var(--serif); font-weight:600; font-size:14.5pt; color:var(--brass-deep);
+    margin:20px 0 6px; padding-top:8px; border-top:1px solid var(--line); break-after:avoid; }
+  h3 { font-family:var(--serif); font-weight:600; font-size:11.6pt; color:#33291a; margin:13px 0 4px; break-after:avoid; }
+  h4 { font-family:var(--sans); font-weight:700; font-size:9pt; letter-spacing:.06em; text-transform:uppercase; color:var(--soft); margin:11px 0 3px; }
+  p { margin:0 0 8px; }
+  strong { color:#241d10; }
+  a { color:var(--brass-deep); text-decoration:none; }
+  code { font-family:var(--mono); font-size:8.7pt; background:#f2ead6; border:1px solid var(--line); border-radius:2px; padding:0 3px; color:#4a3f28; }
+  hr { border:0; border-top:1px solid var(--line2); margin:14px 0; }
+  ul,ol { margin:2px 0 9px; padding-left:20px; }
+  li { margin:2px 0; }
+  table { width:100%; border-collapse:collapse; margin:8px 0 12px; font-size:9.4pt; break-inside:avoid; }
+  th { font-family:var(--sans); font-weight:700; font-size:8pt; letter-spacing:.03em; text-transform:uppercase;
+    text-align:left; color:#4a3f28; background:#f2ead6; border-bottom:1.5px solid var(--line2); padding:6px 8px; }
+  td { padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; font-variant-numeric:tabular-nums; }
+  pre.diagram { font-family:var(--mono); font-size:7.6pt; line-height:1.35; background:#f6efdd; border:1px solid var(--line);
+    border-radius:3px; padding:11px 12px; margin:10px 0; overflow:hidden; white-space:pre; break-inside:avoid; color:#463b24; }
+  /* the status band: a lone paragraph that's just an inline-code run */
+  p > code:only-child { display:block; }
+</style></head>
+<body><div class="sheet"><div class="brandbar"><svg class="mark" viewBox="0 0 32 32"><g fill="#9a742a"><ellipse cx="16" cy="24" rx="9" ry="3.4"/><ellipse cx="16" cy="17.5" rx="6.6" ry="2.9"/><ellipse cx="16" cy="12" rx="4.6" ry="2.3"/><ellipse cx="16" cy="7.4" rx="2.7" ry="1.7"/></g></svg><span class="name">CAIRN</span><span class="lab">JourdanLabs · Knowledge Integrity</span></div>
+<h1>CAIRN — One Page</h1>
+<h3>Answer only what you can prove. Get a receipt for every answer — and every refusal.</h3>
+<p><strong>Knowledge integrity and answer provenance for regulated environments.</strong></p>
+<p><code>SOFTWARE: WORKING  ·  TESTS: 53 / 53  ·  DEPENDENCIES: 0  ·  RUNS: FULLY LOCAL  ·  STATUS: ● GREEN-GATED</code></p>
+<hr/>
+<h3>WHAT THIS IS</h3>
+<p>CAIRN reads your own documents and answers questions about them — but <strong>only with things it can prove are actually in there</strong>, and it hands you a cryptographic <strong>receipt</strong> for every answer. It also watches your knowledge base for the quiet rot that breaks it: contradictions, stale pages, broken links, and orphaned notes.</p>
+<p>It is not a chatbot and not a search bar. It answers the question <em>"can we prove it, and does the knowledge base even agree with itself?"</em></p>
+<h3>THE PROBLEM</h3>
+<p>In a regulated firm, the knowledge base <strong>is</strong> a control surface — policies and procedures are how people (and now AI assistants) know what to do. But it rots quietly: two procedures conflict and nobody notices; the superseded version is still what search returns; answers get pulled from the nearest-sounding document, not the correct one; and when a regulator asks <em>"how did your people know to do X,"</em> there is no record tying the action to its source.</p>
+<p>AI assistants do not fix this — they <strong>amplify</strong> it. A confident, fluent answer from the wrong or stale document is not a productivity gain; it is a compliance incident waiting to be discovered.</p>
+<h3>HOW CAIRN WORKS — THREE THINGS</h3>
+<ul><li><strong>Cite-or-refuse answers, receipted.</strong> Every claim carries a citation, or CAIRN replies exactly <em>"Not in your vault."</em> A confidence gate refuses weak matches <strong>before the model is ever called</strong>, so it cannot hallucinate to fill a gap. Every answer <em>and</em> every refusal emits a hashed receipt: the question, the verdict (<code>GROUNDED</code> / <code>REFUSED_UNGROUNDED</code>), each cited source <strong>SHA-256-hashed</strong> (proof of what it said at answer time), the model, the confidence, and a <code>receipt_sha256</code>. Downloadable as JSON.</li><li><strong>Contradiction &amp; staleness surveillance.</strong> A deterministic audit finds orphans, broken <code>[[links]]</code>, stale notes, duplicate titles, and stubs. Embedding-based overlap detection surfaces same-topic note pairs, and a model adjudicates whether they <strong>contradict</strong>, <strong>duplicate</strong>, or merely <strong>relate</strong>. No search engine does this — it interrogates the corpus for internal conflict.</li><li><strong>A hashed integrity score.</strong> One click produces a 0–100 <strong>Integrity Report</strong> with a letter grade over the whole corpus, rolled into a hashed, downloadable JSON artifact — a regulator-ready snapshot of whether the knowledge base is consistent, current, and reachable.</li></ul>
+<h3>WHY YOU CAN TRUST IT</h3>
+<ul><li><strong>Tamper-evident by construction.</strong> Every answer and report is sealed into a hash-chained ledger; any edit to a past entry — payload, link, or a deleted line — is detectable. (Independently stress-tested three ways; each tampering was caught.)</li><li><strong>Zero dependencies.</strong> Pure Node.js, no third-party packages — nothing to install, nothing to supply-chain-attack. <code>git clone</code> → <code>node server.mjs</code> and it runs.</li><li><strong>Fully local.</strong> The corpus never leaves the machine. Grounded search needs no network at all; answers can run against a local model (Ollama).</li><li><strong>53 automated tests</strong>, and re-executed independently rather than taken on faith.</li></ul>
+<h3>WHAT IT IS — AND ISN'T (HONESTLY)</h3>
+<p>CAIRN is a <strong>control you operate</strong>, not a certification. It generates the evidence a SOC 2 / model-risk review asks for; it is not itself "certified." It ships coded-to-real-API connectors (filesystem live; Confluence on the Cloud v2 API, fixture-tested) and an SSO-ready auth hook — but the last mile that needs <em>your</em> tenant token, <em>your</em> identity provider, and <em>your</em> deployment runs on your systems, not ours. Those boundaries are documented, not hidden.</p>
+<h3>WHO BUILDS IT</h3>
+<p>JourdanLabs builds one kind of system: <strong>deterministic, receipted, and unwilling to bluff</strong> — STRATA (governed semantic layer), CRUCIBLE (deterministic audit + deploy brake), PHAROS (refuses when it cannot prove). CAIRN is that same thesis applied to <strong>knowledge</strong>: a receipt on every answer, and a refusal instead of a guess.</p>
+<hr/>
+<p><strong>Leland Jourdan II</strong> — Founder &amp; Chief Architect, JourdanLabs · <code>leland@jourdanlabs.com</code> <em>Built by JourdanLabs. We build tools that refuse to bluff.</em></p></div></body></html>

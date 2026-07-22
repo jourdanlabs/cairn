@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "description": "CAIRN — grounded, local knowledge-integrity, as a desktop studio.",
+  "author": "JourdanLabs <leland@jourdanlabs.com>",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
