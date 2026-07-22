@@ -30,6 +30,9 @@ export function permissionFor(method, path) {
   if (path.startsWith('/api/connectors')) return 'connectors';
   if (path === '/api/status') return 'report_read';
   if (path === '/api/obsidian-vaults') return 'report_read';
+  if (path === '/api/art') return 'report_read';
+  if (path === '/api/art/upload') return 'manage';
+  if (path === '/api/preferences') return method === 'GET' ? 'report_read' : 'manage';
   return null; // non-API (static) — handled by the server, not gated here
 }
 

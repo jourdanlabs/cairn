@@ -5,7 +5,7 @@
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { readFileSync, existsSync, watch } from 'node:fs';
+import { readFileSync, existsSync, watch, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { dirname, join, extname, normalize, basename } from 'node:path';
@@ -46,7 +46,8 @@ const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.
 // Compliance: top-level folders whose notes are "controlled" (authoritative).
 const CONTROLLED_DIRS = (process.env.CONTROLLED_DIRS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const WATCH = (process.env.WATCH || 'on').toLowerCase() !== 'off';
-const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
+  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.json': 'application/json' };
 
 let INDEX = null;
 
@@ -55,6 +56,34 @@ let INDEX = null;
 const AUTH = makeAuth();
 const LEDGER = new Ledger(join(__dir, '.cairn', 'ledger.jsonl'));
 const STATE_PATH = join(__dir, '.cairn', 'surveillance.json');
+
+// ── user preferences ── a small, persisted settings object the UI edits. Some are
+// UI-only (hero art); others change server behavior (strictness gate, staleness,
+// fully-local lock) and are applied on load + save.
+const PREFS_PATH = join(__dir, '.cairn', 'preferences.json');
+const USER_ART_DIR = join(__dir, '.cairn', 'art');
+const HERO_DIR = join(PUBLIC, 'art', 'heroes');
+const PREFS_DEFAULTS = { hero: 'manuscript', strictness: 0.5, staleDays: 180, searchMode: 'search', localOnly: false, contradictionThreshold: 0.82 };
+let PREFS = { ...PREFS_DEFAULTS };
+function applyPrefs() {
+  if (PREFS.localOnly) process.env.MODEL_LOCAL_ONLY = '1'; else delete process.env.MODEL_LOCAL_ONLY;
+}
+function loadPrefs() {
+  try { PREFS = { ...PREFS_DEFAULTS, ...JSON.parse(readFileSync(PREFS_PATH, 'utf8')) }; } catch { PREFS = { ...PREFS_DEFAULTS }; }
+  applyPrefs();
+}
+function savePrefs() {
+  try { mkdirSync(dirname(PREFS_PATH), { recursive: true }); writeFileSync(PREFS_PATH, JSON.stringify(PREFS, null, 2)); } catch { /* best effort */ }
+}
+const IMG_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.avif', '.gif']);
+const titleize = (id) => id.replace(/[-_]/g, ' ').replace(/\.[a-z]+$/i, '').replace(/\b\w/g, (c) => c.toUpperCase());
+function listHeroes() {
+  const out = [];
+  try { for (const f of readdirSync(HERO_DIR)) { if (f.includes('.thumb.') || !IMG_EXT.has(extname(f).toLowerCase())) continue; const id = f.replace(extname(f), ''); const thumb = `${id}.thumb.jpg`; out.push({ id, label: titleize(id), url: `/art/heroes/${f}`, thumb: existsSync(join(HERO_DIR, thumb)) ? `/art/heroes/${thumb}` : `/art/heroes/${f}`, custom: false }); } } catch { /* none */ }
+  try { for (const f of readdirSync(USER_ART_DIR)) { if (!IMG_EXT.has(extname(f).toLowerCase())) continue; out.push({ id: `user:${f}`, label: titleize(f), url: `/user-art/${f}`, thumb: `/user-art/${f}`, custom: true }); } } catch { /* none */ }
+  return out;
+}
+loadPrefs();
 const surveillanceSinks = [consoleSink, fileSink(join(__dir, '.cairn', 'alerts.jsonl'))];
 if (process.env.CAIRN_ALERT_WEBHOOK) surveillanceSinks.push(webhookSink(process.env.CAIRN_ALERT_WEBHOOK));
 
@@ -193,6 +222,47 @@ const server = createServer(async (req, res) => {
       return send(res, 200, { vaults: readObsidianVaults(), current: VAULT_DIR || null });
     }
 
+    // ── preferences ── the UI's settings; GET reads, POST merges + applies.
+    if (req.method === 'GET' && reqPath === '/api/preferences') {
+      return send(res, 200, { preferences: PREFS });
+    }
+    if (req.method === 'POST' && reqPath === '/api/preferences') {
+      const body = await readBody(req).catch(() => ({}));
+      const p = body.preferences || body || {};
+      if (typeof p.hero === 'string') PREFS.hero = p.hero.slice(0, 200);
+      if (Number.isFinite(p.strictness)) PREFS.strictness = Math.max(0, Math.min(1, p.strictness));
+      if (Number.isFinite(p.staleDays)) PREFS.staleDays = Math.max(1, Math.min(3650, Math.round(p.staleDays)));
+      if (p.searchMode === 'search' || p.searchMode === 'ask') PREFS.searchMode = p.searchMode;
+      if (typeof p.localOnly === 'boolean') PREFS.localOnly = p.localOnly;
+      if (Number.isFinite(p.contradictionThreshold)) PREFS.contradictionThreshold = Math.max(0.5, Math.min(0.99, p.contradictionThreshold));
+      applyPrefs(); savePrefs();
+      return send(res, 200, { ok: true, preferences: PREFS });
+    }
+
+    // ── hero art ── list bundled + user-uploaded masthead images, and accept uploads.
+    if (req.method === 'GET' && reqPath === '/api/art') {
+      return send(res, 200, { art: listHeroes(), selected: PREFS.hero });
+    }
+    if (req.method === 'POST' && reqPath === '/api/art/upload') {
+      const qname = new URL(req.url, 'http://localhost').searchParams.get('name') || '';
+      const ext = extname(qname).toLowerCase();
+      if (!IMG_EXT.has(ext)) return send(res, 400, { error: 'unsupported image type (jpg, png, webp, avif, gif)' });
+      const safe = basename(qname).replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 80);
+      let total = 0; const chunks = [];
+      for await (const c of req) { total += c.length; if (total > 15 * 1024 * 1024) return send(res, 413, { error: 'image too large (max 15MB)' }); chunks.push(c); }
+      const buf = Buffer.concat(chunks);
+      if (!buf.length) return send(res, 400, { error: 'empty upload' });
+      mkdirSync(USER_ART_DIR, { recursive: true });
+      const finalName = existsSync(join(USER_ART_DIR, safe)) ? `${Date.now()}-${safe}` : safe;
+      writeFileSync(join(USER_ART_DIR, finalName), buf);
+      return send(res, 200, { ok: true, art: { id: `user:${finalName}`, label: titleize(finalName), url: `/user-art/${finalName}`, thumb: `/user-art/${finalName}`, custom: true } });
+    }
+    if (reqPath.startsWith('/user-art/')) {
+      const full = normalize(join(USER_ART_DIR, decodeURIComponent(reqPath.slice('/user-art/'.length))));
+      if (!full.startsWith(USER_ART_DIR) || !existsSync(full)) return send(res, 404, 'not found', 'text/plain');
+      return send(res, 200, await readFile(full), MIME[extname(full).toLowerCase()] || 'application/octet-stream');
+    }
+
     if (req.method === 'GET' && req.url === '/api/status') {
       return send(res, 200, {
         vault: VAULT_DIR || null,
@@ -214,7 +284,7 @@ const server = createServer(async (req, res) => {
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
       const sem = await semFor(q);
-      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem }) });
+      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem, strictness: PREFS.strictness }) });
     }
 
     if (req.method === 'POST' && req.url === '/api/answer') {
@@ -222,7 +292,7 @@ const server = createServer(async (req, res) => {
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
       const sem = await semFor(q);
-      const r = search(INDEX, q, { k: 10, semScores: sem });
+      const r = search(INDEX, q, { k: 10, semScores: sem, strictness: PREFS.strictness });
       // Nothing to ground on → refuse up front, never call the model to fill a gap.
       if (r.weak || !r.hits.length) {
         const receipt = answerReceipt({ q, r, ans: null });
@@ -246,13 +316,13 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/api/audit') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const body = await readBody(req).catch(() => ({}));
-      return send(res, 200, audit(INDEX, { staleDays: body.stale_days || 180 }));
+      return send(res, 200, audit(INDEX, { staleDays: body.stale_days || PREFS.staleDays }));
     }
 
     if (req.method === 'POST' && req.url === '/api/integrity') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       const body = await readBody(req).catch(() => ({}));
-      const rep = await integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: body.stale_days || 180, adjudicate: Boolean(body.adjudicate), adjudicateLimit: body.limit || 8 });
+      const rep = await integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: body.stale_days || PREFS.staleDays, adjudicate: Boolean(body.adjudicate), adjudicateLimit: body.limit || 8 });
       // Stamp a compact report receipt into the ledger (the audit record).
       const led = LEDGER.append('integrity_report', {
         score: rep.integrity_score, grade: rep.grade, report_sha256: rep.report_sha256,
@@ -268,7 +338,7 @@ const server = createServer(async (req, res) => {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       if (!INDEX.embedded) return send(res, 200, { available: false, reason: 'Needs embeddings — set a model endpoint + MODEL_EMBED (e.g. local Ollama).', pairs: [] });
       const body = await readBody(req).catch(() => ({}));
-      const found = similarPairs(INDEX, { threshold: body.threshold || 0.82, maxPairs: body.max || 20 });
+      const found = similarPairs(INDEX, { threshold: body.threshold || PREFS.contradictionThreshold, maxPairs: body.max || 20 });
       if (body.adjudicate && modelEnabled()) {
         const adj = await adjudicatePairs(found.pairs, { limit: body.limit || 6 });
         return send(res, 200, { ...found, ...adj });
@@ -299,7 +369,7 @@ const server = createServer(async (req, res) => {
     // receipt chain + its verification. This is the artifact an auditor asks for.
     if (req.method === 'GET' && reqPath === '/api/compliance/export') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
-      const rep = await integrityReport(INDEX, { vaultName: VAULT_NAME });
+      const rep = await integrityReport(INDEX, { vaultName: VAULT_NAME, staleDays: PREFS.staleDays });
       const bundle = {
         generated_at: new Date().toISOString(),
         product: 'CAIRN', vault: rep.vault,

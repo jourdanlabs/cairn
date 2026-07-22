@@ -195,12 +195,52 @@
   .ob-foot .pf { font:400 12.5px var(--serif); color:var(--muted); }
   .ob-foot .pf b { color:#33291a; font-weight:600; }
   .ob-code { font:500 11px var(--mono); background:#f2ead6; border:1px solid var(--line); border-radius:2px; padding:1px 5px; color:#4a3f28; word-break:break-all; }
+
+  /* ── preferences panel ── */
+  .gearbtn { font:600 10.5px var(--mono); letter-spacing:.08em; text-transform:uppercase; padding:8px 11px; border-radius:999px;
+    border:1px solid var(--line2); color:#5c4f34; background:rgba(245,238,221,.82); backdrop-filter:blur(3px); box-shadow:var(--leaf-shadow); cursor:pointer; }
+  .gearbtn:hover { color:var(--brass-deep); border-color:var(--brass); }
+  .prefs { position:fixed; inset:0; z-index:70; display:none; align-items:flex-start; justify-content:center; padding:5vh 20px 40px; background:rgba(40,28,12,.34); overflow:auto; }
+  .prefs.show { display:flex; }
+  .pf-card { width:min(700px,96vw); background:var(--surface); border:1px solid var(--line2); border-radius:6px; box-shadow:0 30px 70px -22px rgba(40,28,12,.62); overflow:hidden; animation:leafIn .35s ease-out both; }
+  .pf-head { display:flex; align-items:center; justify-content:space-between; padding:17px 24px; border-bottom:1px solid var(--line); background:linear-gradient(#f7f0df,#f2ead6); }
+  .pf-head h2 { font:600 21px var(--serif); color:#241d10; margin:0; }
+  .pf-head .x { font:400 20px var(--sans); color:var(--muted); background:none; border:0; cursor:pointer; line-height:1; padding:4px 8px; }
+  .pf-head .x:hover { color:var(--ink); }
+  .pf-sec { padding:18px 24px; border-top:1px solid var(--line); }
+  .pf-title { font:600 10.5px var(--mono); letter-spacing:.14em; text-transform:uppercase; color:var(--brass-deep); margin:0 0 14px; }
+  .pf-row { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 15px; }
+  .pf-row:last-child { margin-bottom:0; }
+  .pf-label { font:600 13.5px var(--serif); color:#2b2415; }
+  .pf-desc { font:italic 400 12px/1.4 var(--serif); color:var(--muted); margin-top:3px; max-width:36ch; }
+  input[type=range].pf-slider { width:170px; accent-color:var(--brass); }
+  .pf-val { font:600 12px var(--mono); color:var(--brass-deep); min-width:74px; text-align:right; }
+  .pf-toggle { width:44px; height:25px; border-radius:999px; border:1px solid var(--line2); background:#e7dcc4; position:relative; cursor:pointer; transition:background .15s; flex:0 0 auto; }
+  .pf-toggle.on { background:var(--sage); border-color:var(--sage-deep); }
+  .pf-toggle::after { content:""; position:absolute; top:2px; left:2px; width:19px; height:19px; border-radius:50%; background:#fbf6ea; box-shadow:0 1px 2px rgba(0,0,0,.25); transition:left .15s; }
+  .pf-toggle.on::after { left:22px; }
+  .pf-seg { display:inline-flex; background:#eadfc7; border:1px solid var(--line2); border-radius:4px; padding:3px; gap:3px; }
+  .pf-seg button { font:600 12px var(--sans); border:0; background:transparent; color:#6f6349; padding:6px 13px; border-radius:3px; cursor:pointer; }
+  .pf-seg button.on { background:var(--surface); color:var(--brass-deep); box-shadow:var(--leaf-shadow); }
+  .pf-num { width:66px; font:500 13px var(--mono); text-align:right; padding:7px 9px; border:1px solid var(--line2); border-radius:3px; background:#fbf6ea; color:var(--ink); }
+  .hero-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:560px){ .hero-grid { grid-template-columns:repeat(2,1fr); } }
+  .hero-tile { position:relative; border:2px solid var(--line2); border-radius:5px; overflow:hidden; cursor:pointer; aspect-ratio:16/9; background:#e7dcc4; padding:0; font-family:var(--mono); }
+  .hero-tile img { width:100%; height:100%; object-fit:cover; display:block; }
+  .hero-tile:hover { border-color:var(--brass); }
+  .hero-tile.sel { border-color:var(--brass); box-shadow:0 0 0 2px rgba(169,129,47,.32); }
+  .hero-tile .cap { position:absolute; left:0; right:0; bottom:0; font:600 9.5px var(--mono); letter-spacing:.04em; color:#f7f1e1; background:linear-gradient(transparent,rgba(30,22,10,.74)); padding:14px 8px 5px; text-align:left; text-transform:uppercase; }
+  .hero-tile .sel-mark { position:absolute; top:6px; right:6px; width:20px; height:20px; border-radius:50%; background:var(--brass); color:#fff; font:700 12px var(--sans); display:none; align-items:center; justify-content:center; }
+  .hero-tile.sel .sel-mark { display:flex; }
+  .hero-up { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:1.5px dashed var(--line2); color:var(--brass-deep);
+    font:600 10.5px var(--mono); letter-spacing:.06em; text-transform:uppercase; cursor:pointer; background:#fbf6ea; text-align:center; line-height:1.4; }
+  .hero-up:hover { border-color:var(--brass); }
 </style>
 </head>
 <body>
   <header class="masthead">
     <img src="/art/hero.jpg" alt="An archivist's bench: a brass magnifier over a manuscript, an engraved pocket watch, sage botanicals" />
-    <div class="status-wrap"><span id="status" class="pill">indexing…</span></div>
+    <div class="status-wrap"><button id="prefsbtn" class="gearbtn" title="Preferences (⌘,)" aria-label="Preferences">⚙ Settings</button><span id="status" class="pill">indexing…</span></div>
     <div class="plate">
       <div class="wordmark">
         <h1>CAIRN</h1>
@@ -223,6 +263,36 @@
         <span class="pf"><b>Cite-or-refuse</b> — proof, or "Not in your vault"</span>
         <span class="pf"><b>Receipts</b> — a hash for every answer</span>
         <span class="pf"><b>Integrity</b> — score your whole corpus</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="prefs" class="prefs" role="dialog" aria-modal="true" aria-label="Preferences">
+    <div class="pf-card">
+      <div class="pf-head"><h2>Preferences</h2><button class="x" id="pf-close" aria-label="Close">✕</button></div>
+      <div class="pf-sec">
+        <p class="pf-title">Masthead art</p>
+        <div class="hero-grid" id="hero-grid"></div>
+        <input type="file" id="art-file" accept="image/*" style="display:none" />
+      </div>
+      <div class="pf-sec">
+        <p class="pf-title">Answering</p>
+        <div class="pf-row"><div><div class="pf-label">Answer strictness</div><div class="pf-desc">How sure CAIRN must be before it answers instead of refusing. Higher = refuses more.</div></div>
+          <div style="display:flex;align-items:center;gap:10px"><input type="range" min="0" max="100" class="pf-slider" id="pf-strict"><span class="pf-val" id="pf-strict-val"></span></div></div>
+        <div class="pf-row"><div><div class="pf-label">Default mode</div><div class="pf-desc">What the box does when you open CAIRN.</div></div>
+          <div class="pf-seg" id="pf-mode"><button data-m="search">Search</button><button data-m="ask">Ask</button></div></div>
+      </div>
+      <div class="pf-sec">
+        <p class="pf-title">Integrity</p>
+        <div class="pf-row"><div><div class="pf-label">Stale after</div><div class="pf-desc">Notes older than this with open tasks count as stale.</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><input type="number" min="1" max="3650" class="pf-num" id="pf-stale"><span class="pf-val" style="min-width:auto">days</span></div></div>
+        <div class="pf-row"><div><div class="pf-label">Contradiction sensitivity</div><div class="pf-desc">How similar two notes must be to surface as a candidate.</div></div>
+          <div style="display:flex;align-items:center;gap:10px"><input type="range" min="60" max="98" class="pf-slider" id="pf-contra"><span class="pf-val" id="pf-contra-val"></span></div></div>
+      </div>
+      <div class="pf-sec">
+        <p class="pf-title">Privacy</p>
+        <div class="pf-row"><div><div class="pf-label">Fully local</div><div class="pf-desc">Refuse any non-local model endpoint — nothing can phone home, even by misconfiguration.</div></div>
+          <div class="pf-toggle" id="pf-local" role="switch" tabindex="0"></div></div>
       </div>
     </div>
   </div>
@@ -352,6 +422,60 @@ async function onVaultPick(btn){
     const go=btn.querySelector('.v-go'); const t=go.textContent; go.textContent='Copied ✓'; setTimeout(()=>go.textContent=t,1400);
   }
 }
+
+// --- preferences: settings panel (appearance / answering / integrity / privacy) ---
+let PREFS = null;
+const heroUrl = (h) => h && h.startsWith('user:') ? '/user-art/'+encodeURIComponent(h.slice(5)) : '/art/heroes/'+encodeURIComponent(h)+'.jpg';
+const strictLabel = (v) => { v=Number(v); return v<34?'Lenient':v<50?'Relaxed':v==50?'Calibrated':v<75?'Careful':'Strict'; };
+function applyHero(h){ const img=document.querySelector('.masthead img'); if(img&&h) img.src=heroUrl(h); }
+async function loadPrefs(){
+  try { PREFS=(await (await apiFetch('/api/preferences')).json()).preferences; } catch { PREFS=null; }
+  if(PREFS){ if(PREFS.hero) applyHero(PREFS.hero); if(PREFS.searchMode) setMode(PREFS.searchMode); }
+}
+async function savePref(patch){ if(PREFS) Object.assign(PREFS,patch); try { await apiFetch('/api/preferences',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(patch)}); } catch {} }
+function selectHero(id){ savePref({hero:id}); applyHero(id); document.querySelectorAll('.hero-tile[data-hero]').forEach(t=>t.classList.toggle('sel',t.dataset.hero===id)); }
+async function renderHeroGrid(){
+  const grid=document.getElementById('hero-grid');
+  let art=[]; try { art=(await (await apiFetch('/api/art')).json()).art||[]; } catch {}
+  grid.innerHTML = art.map(a=>`<button class="hero-tile ${a.id===(PREFS&&PREFS.hero)?'sel':''}" data-hero="${esc(a.id)}"><img src="${esc(a.thumb)}" alt="${esc(a.label)}" loading="lazy"><span class="sel-mark">✓</span><span class="cap">${esc(a.label)}</span></button>`).join('')
+    + `<button class="hero-tile hero-up" id="hero-up">＋<span>Upload<br>your art</span></button>`;
+  grid.querySelectorAll('.hero-tile[data-hero]').forEach(t=>t.onclick=()=>selectHero(t.dataset.hero));
+  document.getElementById('hero-up').onclick=()=>document.getElementById('art-file').click();
+}
+async function openPrefs(){
+  if(!PREFS) await loadPrefs();
+  document.getElementById('prefs').classList.add('show');
+  await renderHeroGrid();
+  const strict=document.getElementById('pf-strict'), sv=document.getElementById('pf-strict-val');
+  strict.value=Math.round((PREFS.strictness??0.5)*100); sv.textContent=strictLabel(strict.value);
+  strict.oninput=()=>sv.textContent=strictLabel(strict.value);
+  strict.onchange=()=>savePref({strictness:Number(strict.value)/100});
+  const contra=document.getElementById('pf-contra'), cv=document.getElementById('pf-contra-val');
+  contra.value=Math.round((PREFS.contradictionThreshold??0.82)*100); cv.textContent=contra.value+'%';
+  contra.oninput=()=>cv.textContent=contra.value+'%';
+  contra.onchange=()=>savePref({contradictionThreshold:Number(contra.value)/100});
+  const stale=document.getElementById('pf-stale'); stale.value=PREFS.staleDays??180; stale.onchange=()=>savePref({staleDays:Number(stale.value)});
+  const local=document.getElementById('pf-local'); local.classList.toggle('on',!!PREFS.localOnly);
+  local.onclick=()=>{ const v=!PREFS.localOnly; local.classList.toggle('on',v); savePref({localOnly:v}); };
+  document.querySelectorAll('#pf-mode button').forEach(b=>{ b.classList.toggle('on',b.dataset.m===PREFS.searchMode);
+    b.onclick=()=>{ document.querySelectorAll('#pf-mode button').forEach(x=>x.classList.toggle('on',x===b)); savePref({searchMode:b.dataset.m}); setMode(b.dataset.m); }; });
+}
+function closePrefs(){ document.getElementById('prefs').classList.remove('show'); }
+document.getElementById('art-file').onchange=async(e)=>{
+  const file=e.target.files[0]; if(!file) return;
+  const up=document.getElementById('hero-up'); if(up) up.textContent='Uploading…';
+  try {
+    const res=await apiFetch('/api/art/upload?name='+encodeURIComponent(file.name),{method:'POST',headers:{'content-type':file.type||'application/octet-stream'},body:file});
+    const d=await res.json();
+    if(d.ok){ await renderHeroGrid(); selectHero(d.art.id); } else { alert(d.error||'Upload failed'); }
+  } catch(err){ alert('Upload failed: '+err.message); }
+  e.target.value='';
+};
+document.getElementById('prefsbtn').onclick=openPrefs;
+document.getElementById('pf-close').onclick=closePrefs;
+document.getElementById('prefs').onclick=(e)=>{ if(e.target.id==='prefs') closePrefs(); };
+window.addEventListener('keydown',e=>{ if((e.metaKey||e.ctrlKey)&&e.key===','){ e.preventDefault(); openPrefs(); } else if(e.key==='Escape') closePrefs(); });
+loadPrefs();
 
 // --- status ---
 apiFetch('/api/status').then(async r=>{
