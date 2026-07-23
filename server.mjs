@@ -16,6 +16,7 @@ import { audit } from './lib/audit.mjs';
 import { groundedAnswer } from './lib/ground.mjs';
 import { modelEnabled, embeddingsEnabled, chat } from './lib/model.mjs';
 import { consolidateEntity, slugify } from './lib/consolidate.mjs';
+import { getProfile, kindGuidance } from './lib/profiles.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
 import { integrityReport } from './lib/integrity.mjs';
@@ -77,6 +78,12 @@ function logAccess(rec) {
 const ALLOWED_EXTS = ['.md', '.markdown', '.txt', '.text', '.log', '.csv', '.tsv', '.rtf', '.docx', '.pptx', '.xlsx', '.pdf'];
 let PREFS = { ...PREFS_DEFAULTS };
 const effExts = () => (Array.isArray(PREFS.extensions) && PREFS.extensions.length) ? PREFS.extensions : EXTS;
+// Edition: env wins, then preference, then personal. A profile changes vocabulary,
+// default strictness, and card kinds — never the engine.
+const profile = () => getProfile(process.env.CAIRN_PROFILE || PREFS.profile || 'personal');
+// Strictness: an operator's non-default choice wins; otherwise the profile default;
+// otherwise the calibrated 0.5. (A law matter file answers conservatively out of the box.)
+const effStrictness = () => (PREFS.strictness !== PREFS_DEFAULTS.strictness ? PREFS.strictness : (profile().prefs.strictness ?? PREFS.strictness));
 function applyPrefs() {
   if (PREFS.localOnly) process.env.MODEL_LOCAL_ONLY = '1'; else delete process.env.MODEL_LOCAL_ONLY;
 }
@@ -250,6 +257,7 @@ const server = createServer(async (req, res) => {
       if (Number.isFinite(p.strictness)) PREFS.strictness = Math.max(0, Math.min(1, p.strictness));
       if (Number.isFinite(p.staleDays)) PREFS.staleDays = Math.max(1, Math.min(3650, Math.round(p.staleDays)));
       if (p.searchMode === 'search' || p.searchMode === 'ask') PREFS.searchMode = p.searchMode;
+      if (typeof p.profile === 'string' && getProfile(p.profile).name === p.profile.toLowerCase()) PREFS.profile = p.profile.toLowerCase();
       if (typeof p.localOnly === 'boolean') PREFS.localOnly = p.localOnly;
       if (Number.isFinite(p.contradictionThreshold)) PREFS.contradictionThreshold = Math.max(0.5, Math.min(0.99, p.contradictionThreshold));
       if (Array.isArray(p.extensions)) { const v = p.extensions.map((e) => String(e).toLowerCase()).filter((e) => ALLOWED_EXTS.includes(e)); PREFS.extensions = v.length ? v : null; }
@@ -294,6 +302,8 @@ const server = createServer(async (req, res) => {
         ready: Boolean(INDEX),
         auth: AUTH.open ? 'open' : 'closed',
         ledger: LEDGER.count(),
+        profile: { name: profile().name, label: profile().label, terms: profile().terms, kinds: Object.keys(profile().cardKinds || {}) },
+        strictness: effStrictness(),
       });
     }
 
@@ -302,7 +312,7 @@ const server = createServer(async (req, res) => {
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
       const sem = await semFor(q);
-      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem, strictness: PREFS.strictness }) });
+      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness() }) });
     }
 
     if (req.method === 'POST' && req.url === '/api/answer') {
@@ -310,7 +320,7 @@ const server = createServer(async (req, res) => {
       const { q = '' } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
       const sem = await semFor(q);
-      const r = search(INDEX, q, { k: 10, semScores: sem, strictness: PREFS.strictness });
+      const r = search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness() });
       // Nothing to ground on → refuse up front, never call the model to fill a gap.
       if (r.weak || !r.hits.length) {
         const receipt = answerReceipt({ q, r, ans: null });
@@ -339,13 +349,15 @@ const server = createServer(async (req, res) => {
     if (req.method === 'POST' && req.url === '/api/consolidate') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
       if (!modelEnabled()) return send(res, 400, { error: 'consolidation needs a model — Ask is off' });
-      const { entity = '' } = await readBody(req);
+      const { entity = '', kind = '' } = await readBody(req);
       const name = String(entity).trim();
       if (!name) return send(res, 400, { error: 'entity required' });
       try {
         const r = await consolidateEntity(INDEX, name, {
           chatFn: chat,
-          searchFn: (q, o) => search(INDEX, q, { ...o, strictness: PREFS.strictness }),
+          searchFn: (q, o) => search(INDEX, q, { ...o, strictness: effStrictness() }),
+          kind: String(kind).trim() || null,
+          guidance: kindGuidance(profile(), kind), // profile card-kind angle (witness/issue/matter…)
         });
         if (!r.markdown) return send(res, 200, { entity: name, written: false, reason: 'no passages mention this entity', facts: [], dropped: [] });
         const dir = join(VAULT_DIR, 'cards');
