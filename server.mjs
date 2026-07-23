@@ -14,7 +14,8 @@ import { buildIndex, indexDocuments } from './lib/index.mjs';
 import { search } from './lib/search.mjs';
 import { audit } from './lib/audit.mjs';
 import { groundedAnswer } from './lib/ground.mjs';
-import { modelEnabled, embeddingsEnabled } from './lib/model.mjs';
+import { modelEnabled, embeddingsEnabled, chat } from './lib/model.mjs';
+import { consolidateEntity, slugify } from './lib/consolidate.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
 import { integrityReport } from './lib/integrity.mjs';
@@ -205,9 +206,11 @@ function scheduleReindex() {
   reindexTimer = setTimeout(async () => {
     try {
       const idx = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
-      if (embeddingsEnabled()) await embedIndex(idx).catch(() => {});
+      // Swap FIRST so edits are searchable (lexically) at once; embed behind. Waiting on
+      // the embed to swap makes every vault edit invisible for the length of the pass.
       INDEX = idx;
-      console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks${INDEX.embedded ? ' (embedded)' : ''}`);
+      console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks`);
+      if (embeddingsEnabled()) embedIndex(idx).then(() => { if (INDEX === idx) console.log('↻ embeddings caught up — hybrid live'); }).catch(() => {});
     } catch (e) { console.error('reindex failed:', e.message); }
   }, 1500);
 }
@@ -326,6 +329,59 @@ const server = createServer(async (req, res) => {
       } catch (e) {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e) });
       }
+    }
+
+    // Consolidation: distill what the corpus says about an entity into a held-knowledge
+    // card — model-extracted facts that survive MECHANICAL quote verification, written
+    // into the vault (so search indexes them like any note) and receipt-sealed in the
+    // ledger. The gather step is lexical + collocation (deterministic); the extraction
+    // runs at temperature 0; unverifiable facts are dropped and counted, never kept.
+    if (req.method === 'POST' && req.url === '/api/consolidate') {
+      if (!INDEX) return send(res, 503, { error: 'index not ready' });
+      if (!modelEnabled()) return send(res, 400, { error: 'consolidation needs a model — Ask is off' });
+      const { entity = '' } = await readBody(req);
+      const name = String(entity).trim();
+      if (!name) return send(res, 400, { error: 'entity required' });
+      try {
+        const r = await consolidateEntity(INDEX, name, {
+          chatFn: chat,
+          searchFn: (q, o) => search(INDEX, q, { ...o, strictness: PREFS.strictness }),
+        });
+        if (!r.markdown) return send(res, 200, { entity: name, written: false, reason: 'no passages mention this entity', facts: [], dropped: [] });
+        const dir = join(VAULT_DIR, 'cards');
+        mkdirSync(dir, { recursive: true });
+        const file = join(dir, `${slugify(name)}.md`);
+        writeFileSync(file, r.markdown);
+        const led = LEDGER.append('card_receipt', {
+          entity: name, type: r.type, receipt: r.receipt,
+          facts_verified: r.verified.length, facts_dropped: r.dropped.length,
+          sources: r.passages.length, at: r.generatedAt,
+        });
+        return send(res, 200, {
+          entity: name, written: true, file: `cards/${slugify(name)}.md`, type: r.type,
+          name_evidence: r.nameFact || null,
+          facts: r.verified, dropped: r.dropped.map((d) => ({ fact: d.fact, reason: d.reason })),
+          sources: r.passages.map((p) => ({ note: p.note, why: p.why })),
+          receipt: r.receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash },
+        });
+      } catch (e) {
+        return send(res, 500, { error: `consolidation failed: ${String(e.message || e)}` });
+      }
+    }
+
+    // The held-knowledge shelf: every card currently in the vault, with its receipt.
+    if (req.method === 'GET' && reqPath === '/api/cards') {
+      const dir = join(VAULT_DIR, 'cards');
+      let files = [];
+      try { files = readdirSync(dir).filter((f) => f.endsWith('.md')); } catch { /* no cards yet */ }
+      const cards = files.map((f) => {
+        try {
+          const txt = readFileSync(join(dir, f), 'utf8');
+          const grab = (k) => (txt.match(new RegExp(`^${k}: (.*)$`, 'm')) || [])[1] || '';
+          return { file: `cards/${f}`, entity: JSON.parse(grab('entity') || '""') || f.replace(/\.md$/, ''), type: grab('type'), generated: grab('generated'), facts_verified: Number(grab('facts_verified') || 0), facts_dropped: Number(grab('facts_dropped') || 0), receipt: grab('receipt') };
+        } catch { return { file: `cards/${f}` }; }
+      });
+      return send(res, 200, { count: cards.length, cards });
     }
 
     if (req.method === 'POST' && req.url === '/api/audit') {
