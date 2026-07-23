@@ -32,6 +32,32 @@ function writeConfig(patch) {
 
 let win;
 let server;
+let MODEL_ENV = {}; // auto-detected local model config (Ollama), passed to the server
+
+// If a local Ollama is running, wire its models into the server so Ask + semantic
+// search "just work" — no config. Prefers a fast general chat model; uses any
+// *embed* model for semantic search. Silent no-op if Ollama isn't up.
+async function detectLocalModel() {
+  try {
+    const r = await fetch("http://localhost:11434/api/tags", { signal: AbortSignal.timeout(1200) });
+    if (!r.ok) return {};
+    const names = ((await r.json()).models || []).map((m) => m.name || m.model).filter(Boolean);
+    const embed = names.find((n) => /embed/i.test(n));
+    const chat =
+      names.find((n) => /gemma4/i.test(n)) ||
+      names.find((n) => /gemma3/i.test(n)) ||
+      names.find((n) => /qwen3(?!.*coder)/i.test(n)) ||
+      names.find((n) => /(gemma|llama|mistral|phi)/i.test(n)) ||
+      names.find((n) => !/embed/i.test(n));
+    if (!chat) return {};
+    console.log(`[cairn] local model: ${chat}${embed ? " + " + embed : ""} (Ollama)`);
+    return {
+      MODEL_BASE_URL: "http://localhost:11434/v1",
+      MODEL_NAME: chat,
+      ...(embed ? { MODEL_EMBED: embed, EMBEDDINGS: "on" } : {}),
+    };
+  } catch { return {}; }
+}
 
 function startServer(vault) {
   if (process.env.CAIRN_SKIP_SERVER) return;
@@ -43,6 +69,7 @@ function startServer(vault) {
     ELECTRON_RUN_AS_NODE: "1",
     PORT: String(port), HOST: "127.0.0.1",
     CAIRN_STATE_DIR: path.join(app.getPath("userData"), "state"),
+    ...MODEL_ENV, // local Ollama, if detected
   };
   if (vault) env.VAULT_DIR = vault;          // explicit choice overrides .env
   else delete env.VAULT_DIR;                  // no choice → let server.mjs read its .env
@@ -127,6 +154,7 @@ ipcMain.handle("cairn:pick-folder", async () => { await openVaultDialog(); retur
 
 app.whenReady().then(async () => {
   buildMenu();
+  MODEL_ENV = await detectLocalModel(); // light up Ask + semantic search if Ollama is running
   const saved = readConfig().vault;
   const vault = saved && existsSync(saved) ? saved : null; // remembered vault, if it still exists
   startServer(vault);
