@@ -191,3 +191,26 @@ test('hybrid gate: a hit that is neither semantically strong nor lexically subst
     assert.ok(r3.confidence > r.confidence, 'substantiated confidence must beat unsubstantiated');
   } finally { rmVault(dir); }
 });
+
+test('phrase proximity: the verbatim phrase outranks scattered words', async () => {
+  const { index, dir } = await idx({
+    'scattered.md': `# Paint Notes\n\nThe white paint had some rust stains near the edge. White primer covers rust poorly, and white surfaces show rust marks; rust and white contrast strongly.\n`,
+    'phrase.md': `# Corrosion Report\n\nInspection found white rust on pallets two and five, consistent with moisture exposure under a failed tarp.\n`,
+  });
+  try {
+    const res = search(index, 'white rust', { k: 5 });
+    assert.equal(res.hits[0].note, 'phrase.md', 'the exact phrase must beat higher term frequency');
+  } finally { rmVault(dir); }
+});
+
+test('phrase proximity: stopword pairs never form bigrams (no uniform boost)', async () => {
+  const { index, dir } = await idx({
+    'a.md': `# Alpha\n\nThe report of the committee covers budget planning in the annex building.\n`,
+    'b.md': `# Beta\n\nBudget planning documents are stored with the finance team records.\n`,
+  });
+  try {
+    // "of the" appears verbatim in a.md; it must not boost a.md over the better match
+    const res = search(index, 'budget planning of the finance team', { k: 5 });
+    assert.equal(res.hits[0].note, 'b.md');
+  } finally { rmVault(dir); }
+});
