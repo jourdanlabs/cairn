@@ -1,0 +1,38 @@
+# CAIRN Civic Edition — live public instance. Town of Alder Creek (synthetic): the
+# clerk's nightmare — adopted law says ninety days, the published code still says one
+# hundred twenty. Ships its sealed ledger (ordinance + official cards). No model aboard:
+# the fabricated "Ordinance 2026-11" refuses by arithmetic, on the record — the exact
+# answer the NYC MyCity chatbot could not give.
+app = "cairn-civic"
+primary_region = "ord"
+
+[build]
+  dockerfile = "../../Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"          # public demo box — synthetic data only
+  PORT = "4600"
+  CAIRN_PROFILE = "civic"
+  CAIRN_VAULT_DIR = "/app/demo/town-sample"   # VAULT_* is scrubbed by Fly machines
+  CONTROLLED_DIRS = "adopted"
+  CAIRN_STATE_DIR = "/app/deploy/fly-civic/state"
+  EMBEDDINGS = "off"
+  WATCH = "off"
+
+[http_service]
+  internal_port = 4600
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

@@ -3,7 +3,7 @@ entity: "Ordinance 2026-04"
 card: held-knowledge
 type: other
 kind: ordinance
-generated: 2026-07-23T18:39:29.356Z
+generated: 2026-07-23T21:40:16.248Z
 sources: 7
 facts_verified: 5
 facts_dropped: 1
