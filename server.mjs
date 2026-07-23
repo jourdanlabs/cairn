@@ -470,21 +470,30 @@ async function start() {
     process.stdout.write(`Indexing vault: ${VAULT_DIR} … `);
     INDEX = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
     console.log(`${INDEX.notes.length} notes · ${INDEX.N} chunks`);
-    if (embeddingsEnabled()) {
-      process.stdout.write('Embedding (semantic search) … ');
-      try {
-        const r = await embedIndex(INDEX, (m) => process.stdout.write(`\rEmbedding … ${m}   `));
-        console.log(`\rEmbedded ${INDEX.N} chunks (${r.fresh} new, ${r.cached} cached) via ${r.model}        `);
-      } catch (e) {
-        console.log(`\n  embeddings unavailable (${e.message}) — falling back to lexical search.`);
-      }
-    }
   }
   // Bind loopback by DEFAULT so an open-mode instance is not exposed to the whole
   // network. Set HOST=0.0.0.0 to serve the LAN (do that only with CAIRN_API_KEYS set).
+  // We listen the moment the lexical (BM25) index is ready, BEFORE embedding, so a large
+  // corpus (a whole second brain) is searchable in seconds; semantic/hybrid lights up when
+  // the background embed pass below finishes.
   server.listen(PORT, HOST, () =>
-    console.log(`CAIRN → http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}  · bind: ${HOST}${HOST === '0.0.0.0' && AUTH.open ? ' ⚠ open-mode on all interfaces — set CAIRN_API_KEYS' : ''} · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
+    console.log(`CAIRN → http://${HOST === '0.0.0.0' ? 'localhost' : HOST}:${PORT}  · bind: ${HOST}${HOST === '0.0.0.0' && AUTH.open ? ' ⚠ open-mode on all interfaces — set CAIRN_API_KEYS' : ''} · search: ${INDEX?.embedded ? 'hybrid' : 'lexical'}${INDEX && !INDEX.embedded && embeddingsEnabled() ? ' (embedding in background…)' : ''} · Ask: ${modelEnabled() ? 'on' : 'off'}`),
   );
+
+  // Embeddings build in the BACKGROUND (non-blocking) so the server never makes the
+  // operator wait on a long embed pass to search. The disk cache means only new/changed
+  // chunks re-embed, so restarts are cheap. When this resolves, INDEX.embedded flips true
+  // and search silently upgrades from lexical to hybrid.
+  if (INDEX && embeddingsEnabled()) {
+    (async () => {
+      try {
+        const r = await embedIndex(INDEX, (m) => process.stdout.write(`\rEmbedding … ${m}   `));
+        console.log(`\r✓ embedded ${INDEX.N} chunks (${r.fresh} new, ${r.cached} cached) via ${r.model} — hybrid search live        `);
+      } catch (e) {
+        console.log(`\n  embeddings unavailable (${e.message}) — staying on lexical search.`);
+      }
+    })();
+  }
 
   if (WATCH && VAULT_DIR && existsSync(VAULT_DIR)) {
     try {
