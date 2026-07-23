@@ -34,3 +34,39 @@ curl -s -X POST localhost:4650/api/answer -H 'content-type: application/json' \
 
 The third answer is the sale: CAIRN is architecturally incapable of citing a case
 that is not in the matter file. It refuses, on the record, with a sealed receipt.
+
+---
+
+# Demo corpus — Brightpath metrics (`metrics-sample/`)
+
+**SYNTHETIC DEMO DATA.** Brightpath Software Inc. is fictional. The corpus plants the
+classic enterprise disease: **ARR defined three ways** — the governed semantic-layer
+definition (`governed/`, controlled), a stale Finance wiki FAQ that annualizes usage
+overages, and an analyst crib sheet that multiplies last month's total revenue by twelve.
+Only one of the three is the law; CAIRN's job is to say so with receipts.
+
+## Run the data edition
+
+```bash
+CAIRN_PROFILE=data CAIRN_VAULT_DIR=demo/metrics-sample CONTROLLED_DIRS=governed \
+  PORT=4640 node server.mjs
+```
+
+Then:
+
+```bash
+# the metric card — every definition recorded WITH its source, never merged
+curl -s -X POST localhost:4640/api/consolidate \
+  -H 'content-type: application/json' \
+  -d '{"entity":"ARR","kind":"metric"}'
+
+# the contradiction sweep — governed definition vs the drift orbiting it
+curl -s localhost:4640/api/integrity
+
+# the refusal — a metric nobody ever defined
+curl -s -X POST localhost:4640/api/answer -H 'content-type: application/json' \
+  -d '{"q":"What is our CAC payback period definition?"}'
+```
+
+The pitch in one line: **the semantic layer is the law; CAIRN audits everything that
+cites the law.**

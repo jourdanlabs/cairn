@@ -48,3 +48,16 @@ test('ocrAvailable is a boolean and caches; absence is honest, not fatal', async
   assert.equal(typeof a, 'boolean');
   assert.equal(await ocrAvailable(), a); // cached, stable
 });
+
+test('data/civic/energy profiles: shape, strictness, and the never-merge soul', () => {
+  for (const [name, s] of [['data', 0.65], ['civic', 0.75], ['energy', 0.75]]) {
+    const p = getProfile(name);
+    assert.equal(p.name, name);
+    assert.equal(p.prefs.strictness, s);
+    assert.ok(p.terms.receipt, `${name} must rename receipt in-profession`);
+    assert.ok(Object.keys(p.cardKinds).length >= 3);
+  }
+  assert.ok(kindGuidance(getProfile('data'), 'metric').includes('never merge or average'));
+  assert.ok(kindGuidance(getProfile('energy'), 'moc').includes('OPEN — never assume it was done'));
+  assert.ok(kindGuidance(getProfile('civic'), 'official').includes('Never characterize performance'));
+});

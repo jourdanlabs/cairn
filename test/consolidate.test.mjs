@@ -148,3 +148,24 @@ test('slugify is filesystem-safe', () => {
   assert.equal(slugify('OG Bulma'), 'og-bulma');
   assert.equal(slugify('  C&L / Strategy!  '), 'c-l-strategy');
 });
+
+test('derived cards are never corpus defects: audit + contradictions exclude cards/', async () => {
+  const { audit } = await import('../lib/audit.mjs');
+  const { similarPairs } = await import('../lib/contradict.mjs');
+  const mkNote = (rel) => ({ rel, title: rel, inbound: 0, outlinks: [], mtimeMs: Date.now(), hasMarkers: false, openTasks: 0, stub: false, wordCount: 100, tags: [] });
+  const idx = {
+    notes: [mkNote('cards/arr.md'), mkNote('governed/metric.md')],
+    chunks: [
+      { id: 0, noteRel: 'cards/arr.md', noteTitle: 'card', heading: '', text: 'ARR def A and def B', vec: [1, 0], mtimeMs: Date.now() },
+      { id: 1, noteRel: 'governed/metric.md', noteTitle: 'gov', heading: '', text: 'ARR def A', vec: [1, 0.01], mtimeMs: Date.now() },
+    ],
+    embedded: true,
+    byRel: new Map([['cards/arr.md', { controlled: false }], ['governed/metric.md', { controlled: true }]]),
+  };
+  const a = audit(idx, {});
+  for (const f of a.findings) {
+    assert.ok(f.items.every((o) => !String(o.note || o.from || '').startsWith('cards/')), `cards must not appear in ${f.key} findings`);
+  }
+  const p = similarPairs(idx, { threshold: 0.5, ann: false });
+  assert.ok(p.pairs.every((x) => !x.a.note?.startsWith?.('cards/') && !String(x.a.noteRel || '').startsWith('cards/') && !String(x.b.noteRel || '').startsWith('cards/')), 'cards must not appear in contradiction pairs');
+});

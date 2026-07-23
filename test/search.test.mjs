@@ -214,3 +214,14 @@ test('phrase proximity: stopword pairs never form bigrams (no uniform boost)', a
     assert.equal(res.hits[0].note, 'b.md');
   } finally { rmVault(dir); }
 });
+
+test('confidence never exceeds 1.0 even with phrase boost on the blended score', async () => {
+  const { index, dir } = await idx({
+    'a.md': `# White Rust Report\n\nInspection found white rust on the pallets under the failed tarp near the east row.\n`,
+  });
+  try {
+    const sem = new Float64Array(index.chunks.length).fill(0.9);
+    const r = search(index, 'white rust pallets tarp', { k: 3, semScores: sem });
+    assert.ok(r.confidence <= 1, `confidence must clamp at 1, got ${r.confidence}`);
+  } finally { rmVault(dir); }
+});
