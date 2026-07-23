@@ -165,3 +165,29 @@ test('stemming: query "certify" retrieves a document that only says "certified"'
     assert.ok(res.confidence > 0.6, `expected confident match, got ${res.confidence}`);
   } finally { rmVault(dir); }
 });
+
+test('hybrid gate: a hit that is neither semantically strong nor lexically substantiated refuses', async () => {
+  // The blend defect: top lexical hit always has normalized BM25 = 1.0, so blended
+  // score ≥ 0.55 — the old top-score gate was unreachable and hybrid could never
+  // refuse. The two-signal gate must refuse when BOTH signals are weak.
+  const { index, dir } = await idx({
+    'a.md': `# Widget Assembly\n\nThe widget line assembles housings and gaskets on the second shift with torque checks.\n`,
+    'b.md': `# Cafeteria Menu\n\nSoup and sandwiches are served from eleven to two on weekdays in the annex.\n`,
+  });
+  try {
+    const sem = new Float64Array(index.chunks.length).fill(0.2); // nothing semantically close
+    // query shares ONE common word ("widget") but its distinctive terms are absent
+    const r = search(index, 'widget litigation from the Zorbex acquisition dispute', { k: 5, semScores: sem, strictness: 0.5 });
+    assert.equal(r.mode, 'hybrid');
+    assert.equal(r.weak, true, 'weak-sem + weak-info must refuse');
+    // same corpus, a genuinely semantic match (high cosine, no term overlap) must PASS
+    const semHigh = new Float64Array(index.chunks.length).fill(0.2);
+    semHigh[0] = 0.75;
+    const r2 = search(index, 'lunch options midday', { k: 5, semScores: semHigh, strictness: 0.5 });
+    assert.equal(r2.weak, false, 'strong semantic signal alone must be enough');
+    // and a lexically substantiated match with mediocre semantics must PASS
+    const r3 = search(index, 'widget assembly torque checks', { k: 5, semScores: sem, strictness: 0.5 });
+    assert.equal(r3.weak, false, 'strong info-share alone must be enough');
+    assert.ok(r3.confidence > r.confidence, 'substantiated confidence must beat unsubstantiated');
+  } finally { rmVault(dir); }
+});
