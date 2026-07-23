@@ -1,0 +1,40 @@
+# CAIRN Law Edition — live public instance (the PROVING ROOM doctrine: ship the real
+# thing, then the demo is a tour of production). Serves the synthetic Meridian v.
+# Copperline matter with the law profile, pre-sealed held-knowledge cards, and the
+# shipped receipt ledger — /api/ledger/verify recomputes the chain live.
+#
+# No model on the box, deliberately: refusal is STRUCTURAL (the confidence gate), search
+# returns grounded passages with pin cites, and nothing here can run up an API bill.
+# Prose answers light up when an operator runs the same repo locally with Ollama.
+app = "cairn-law"
+primary_region = "ord"
+
+[build]
+  dockerfile = "../../Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"          # public demo box — synthetic data only, nothing sensitive
+  PORT = "4600"
+  CAIRN_PROFILE = "law"
+  VAULT_DIR = "/app/demo/matter-sample"
+  CAIRN_STATE_DIR = "/app/deploy/fly/state"   # ships the sealed ledger + cards receipts
+  EMBEDDINGS = "off"
+  WATCH = "off"
+
+[http_service]
+  internal_port = 4600
+  force_https = true
+  auto_stop_machines = "stop"   # scale-to-zero: a 7-document index cold-starts in ~2s
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

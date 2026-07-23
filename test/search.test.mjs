@@ -112,3 +112,25 @@ test('an empty/all-stopword query is weak with no query terms', async () => {
     assert.equal(res.hits.length, 0);
   } finally { rmVault(dir); }
 });
+
+test('confidence gate: distinctive absent terms force a refusal even when a common word matches', async () => {
+  // The regression: "Zenith Corp v. Balfour" against a corpus that has none of those
+  // distinctive terms used to score confidence 1.0 off one common matched word (ranking
+  // boosts blew past the old normalization ceiling and min(1,·) clamped). Lexical
+  // confidence is now the idf-weighted share of query information found in the top
+  // passage — it must stay LOW and the gate must refuse.
+  const { index, dir } = await idx({
+    'complaint.md': `# Complaint\n\nThe court will hold a hearing. The plaintiff filed its complaint with the court and the court set a schedule for the parties.\n`,
+    'answer.md': `# Answer\n\nDefendant answers the complaint and denies the allegations before the court.\n`,
+  });
+  try {
+    const res = search(index, 'What did the court hold in Zenith Corp v. Balfour?', { k: 5, strictness: 0.7 });
+    assert.ok(res.confidence < 0.5, `absent distinctive terms must cap confidence, got ${res.confidence}`);
+    assert.equal(res.weak, true, 'the gate must refuse a query whose distinctive terms are nowhere in the corpus');
+
+    // Control: a query whose terms ARE the corpus answers with high confidence.
+    const ok = search(index, 'court complaint hearing', { k: 5, strictness: 0.7 });
+    assert.equal(ok.weak, false);
+    assert.ok(ok.confidence > 0.8, `on-corpus query must be confident, got ${ok.confidence}`);
+  } finally { rmVault(dir); }
+});
