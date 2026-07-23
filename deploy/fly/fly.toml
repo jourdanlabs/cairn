@@ -16,7 +16,9 @@ primary_region = "ord"
   HOST = "0.0.0.0"          # public demo box — synthetic data only, nothing sensitive
   PORT = "4600"
   CAIRN_PROFILE = "law"
-  VAULT_DIR = "/app/demo/matter-sample"
+  # Fly machines silently scrub VAULT_* env vars (reserved for HashiCorp Vault
+  # integration) — the namespaced form survives.
+  CAIRN_VAULT_DIR = "/app/demo/matter-sample"
   CAIRN_STATE_DIR = "/app/deploy/fly/state"   # ships the sealed ledger + cards receipts
   EMBEDDINGS = "off"
   WATCH = "off"

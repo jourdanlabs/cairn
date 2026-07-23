@@ -42,7 +42,10 @@ loadEnv();
 const PUBLIC = join(__dir, 'public');
 const PORT = process.env.PORT || 4600;
 const HOST = process.env.HOST || '127.0.0.1'; // loopback by default; opt into LAN with HOST=0.0.0.0
-const VAULT_DIR = process.env.VAULT_DIR ? process.env.VAULT_DIR.replace(/^~/, process.env.HOME || '~') : '';
+// CAIRN_VAULT_DIR is the namespaced form; VAULT_DIR remains supported. Some platforms
+// (Fly machines, HashiCorp-tooled shops) reserve or scrub VAULT_* env vars — the
+// registered config carries the key and the runtime silently drops it.
+const VAULT_DIR = (process.env.CAIRN_VAULT_DIR || process.env.VAULT_DIR || '').replace(/^~/, process.env.HOME || '~');
 const VAULT_NAME = process.env.OBSIDIAN_VAULT_NAME || (VAULT_DIR ? basename(VAULT_DIR) : '');
 const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
 // Compliance: top-level folders whose notes are "controlled" (authoritative).
