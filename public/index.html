@@ -669,14 +669,34 @@ apiFetch('/api/status').then(async r=>{
 }).then(s=>{
   if(!s) return;
   state.ai = s.ai; state.vault = s.vault_name || '';
+  state.terms = (s.profile && s.profile.terms) || {};
   const p = $('#status');
   if(!s.ready){ p.textContent='no vault yet'; p.className='pill bad'; showOnboarding(); }
-  else { p.textContent = `${s.notes} notes · ${s.chunks} chunks`; p.className='pill on'; hideOnboarding(); }
+  else { p.textContent = `${s.notes} ${term('notes')} · ${s.chunks} chunks`; p.className='pill on'; hideOnboarding(); }
   if(s.auth==='closed'){ p.title='closed mode — click to change API key'; p.style.cursor='pointer'; p.onclick=setApiKey; }
   state.embedded = s.embedded;
   $('#foot-ai').textContent = `${s.search_mode||'lexical'} · Ask ${s.ai?'on':'off'}`;
   setMode(state.mode);
+  applyProfileTerms();
 }).catch(()=>{ $('#status').textContent='server error'; });
+
+// --- edition vocabulary (profiles) ---
+// A profile renames what the operator SEES (vault → matter file, receipt → pin cite);
+// the engine and its ledger are untouched. Whole-word swaps over text nodes only.
+function term(w){ return (state.terms && state.terms[w]) || w; }
+function applyProfileTerms(){
+  const terms = state.terms || {};
+  const keys = Object.keys(terms);
+  if(!keys.length) return;
+  const re = new RegExp('\\b(' + keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|') + ')\\b','g');
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+    acceptNode: n => (n.parentElement && ['SCRIPT','STYLE','TEXTAREA'].includes(n.parentElement.tagName)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+  });
+  const nodes=[]; while(walker.nextNode()) nodes.push(walker.currentNode);
+  for(const n of nodes){ if(re.test(n.nodeValue)){ n.nodeValue = n.nodeValue.replace(re, m=>terms[m]||m); re.lastIndex=0; } }
+  // placeholders + titles carry vocabulary too
+  document.querySelectorAll('[placeholder]').forEach(el=>{ el.placeholder = el.placeholder.replace(re, m=>terms[m]||m); re.lastIndex=0; });
+}
 
 // --- run search / ask ---
 async function run(){
