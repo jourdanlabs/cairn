@@ -134,3 +134,34 @@ test('confidence gate: distinctive absent terms force a refusal even when a comm
     assert.ok(ok.confidence > 0.8, `on-corpus query must be confident, got ${ok.confidence}`);
   } finally { rmVault(dir); }
 });
+
+test('stemming: morphological variants meet at one token, names pass through', async () => {
+  const { stemOf } = await import('../lib/index.mjs');
+  // the class of miss that once false-refused a deposition question
+  assert.equal(stemOf('certify'), stemOf('certified'));
+  assert.equal(stemOf('certify'), stemOf('certifies'));
+  assert.equal(stemOf('policy'), stemOf('policies'));
+  assert.equal(stemOf('scale'), stemOf('scaling'));
+  assert.equal(stemOf('scale'), stemOf('scaled'));
+  assert.equal(stemOf('run'), stemOf('running'));
+  assert.equal(stemOf('bracket'), stemOf('brackets'));
+  assert.equal(stemOf('tarp'), stemOf('tarped'));
+  // names and short words untouched
+  assert.equal(stemOf('okafor'), 'okafor');
+  assert.equal(stemOf('jourdan'), 'jourdan');
+  assert.equal(stemOf('gas'), 'gas');
+  assert.equal(stemOf('api'), 'api');
+});
+
+test('stemming: query "certify" retrieves a document that only says "certified"', async () => {
+  const { index, dir } = await idx({
+    'okafor.md': `# QC Certification\n\nAdaeze Okafor inspected the lot and certified the coating thickness readings before shipment left the dock.\n`,
+    'other.md': `# Shipping Schedule\n\nTrucks depart Tuesdays and Thursdays from the yard with standard freight paperwork attached.\n`,
+  });
+  try {
+    const res = search(index, 'who certified the coating — can Okafor certify thickness?', { k: 5, strictness: 0.7 });
+    assert.equal(res.weak, false, 'morphological variants must not cause refusal');
+    assert.equal(res.hits[0].note, 'okafor.md');
+    assert.ok(res.confidence > 0.6, `expected confident match, got ${res.confidence}`);
+  } finally { rmVault(dir); }
+});
