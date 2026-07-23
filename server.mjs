@@ -16,6 +16,7 @@ import { audit } from './lib/audit.mjs';
 import { groundedAnswer } from './lib/ground.mjs';
 import { modelEnabled, embeddingsEnabled, chat } from './lib/model.mjs';
 import { consolidateEntity, slugify } from './lib/consolidate.mjs';
+import { rerankHits } from './lib/rerank.mjs';
 import { getProfile, kindGuidance } from './lib/profiles.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
@@ -334,11 +335,17 @@ const server = createServer(async (req, res) => {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, weak: r.weak });
       }
       try {
+        // Rerank: the model re-scores retrieved passages for answer-bearing-ness before
+        // grounding — retrieval similarity and "contains the answer" are different
+        // questions, and only the top contexts get read. Fail-open: original order on
+        // any error. Full chunk text (not the snippet) is what gets judged.
+        const rr = await rerankHits(q, r.hits, (h) => INDEX.chunks[h.id]?.text || '', chat);
+        r.hits = rr.hits;
         const contexts = contextsFrom(r.hits);
         const ans = await groundedAnswer({ q, query: q, contexts });
         const receipt = answerReceipt({ q, r, ans });
         const led = LEDGER.append('answer_receipt', receipt);
-        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, confidence: r.confidence, receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
+        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, reranked: rr.reranked, confidence: r.confidence, receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       } catch (e) {
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e) });
       }
