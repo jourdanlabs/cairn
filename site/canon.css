@@ -1,18 +1,11 @@
 /* Cairn Semantics — the canon stylesheet. Full-bleed painting as the world,
    content floating on parchment glass. Shared by the landing and edition pages. */
 :root{
-  --parchment:#ece3d0; --ink:#2b2419; --ink-soft:#544a3a;
-  --brass:#8a5a20; --brass-bright:#a06b2a; --sage:#4e6b47; --rule:#cbbd9f;
-  --glass:rgba(242,235,219,.95); --glass-soft:rgba(242,235,219,.88);
+  --parchment:#171209; --ink:#eadfc6; --ink-soft:#b3a184;
+  --brass:#d9a35c; --brass-bright:#e2b273; --sage:#93b289; --rule:#4a3d29;
+  --glass:rgba(20,15,8,.74); --glass-soft:rgba(20,15,8,.62);
   --mono:"SF Mono",ui-monospace,Menlo,monospace;
   --serif:"Hoefler Text","Iowan Old Style",Georgia,serif;
-}
-@media (prefers-color-scheme: dark){
-  :root{
-    --parchment:#171209; --ink:#eadfc6; --ink-soft:#b3a184;
-    --brass:#d9a35c; --brass-bright:#e2b273; --sage:#93b289; --rule:#4a3d29;
-    --glass:rgba(22,17,9,.93); --glass-soft:rgba(22,17,9,.86);
-  }
 }
 *{box-sizing:border-box;margin:0}
 html{scroll-behavior:smooth}
@@ -81,9 +74,8 @@ a.card:hover,a.card:focus-visible{transform:translateY(-3px);border-color:var(--
 .beat p{font-size:.93rem;color:var(--ink-soft);margin-bottom:10px;text-wrap:pretty}
 .cta-row{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
 .cta{display:inline-block;font-family:var(--mono);font-size:.85rem;letter-spacing:.06em;text-decoration:none;
-  color:var(--parchment);background:var(--brass);border-radius:4px;padding:13px 22px;transition:background .15s ease}
+  color:#171209;background:var(--brass);border-radius:4px;padding:13px 22px;transition:background .15s ease}
 .cta:hover,.cta:focus-visible{background:var(--brass-bright)}
-@media (prefers-color-scheme: dark){.cta{color:#171209}}
 .back{font-family:var(--mono);font-size:.76rem;color:var(--ink-soft);text-decoration:none}
 .back:hover{color:var(--brass-bright)}
 .quick{margin-top:26px;padding:16px 18px;font-family:var(--mono);font-size:.74rem;line-height:1.8;overflow-x:auto;color:var(--ink-soft)}
