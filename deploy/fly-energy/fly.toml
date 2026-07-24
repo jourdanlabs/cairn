@@ -1,0 +1,39 @@
+# CAIRN Energy Edition — live public instance. Unit 300 Amine Treating (synthetic):
+# the PSM signer's nightmare — the SOP says a thirty-minute purge, the approved MOC
+# says fifteen, and the SOP revision follow-up has no completion evidence. Ships its
+# sealed cards + ledger + baked chunk vectors (EMBEDDINGS=cache) so the contradiction
+# sweep runs live, model-free.
+app = "cairn-energy"
+primary_region = "ord"
+
+[build]
+  dockerfile = "../../Dockerfile"
+
+[env]
+  HOST = "0.0.0.0"          # public demo box — synthetic data only
+  PORT = "4600"
+  CAIRN_PROFILE = "energy"
+  CAIRN_VAULT_DIR = "/app/demo/unit-sample"   # VAULT_* is scrubbed by Fly machines
+  CONTROLLED_DIRS = "controlled"
+  CAIRN_STATE_DIR = "/app/deploy/fly-energy/state"
+  EMBEDDINGS = "cache"
+  WATCH = "off"
+  CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com"
+
+[http_service]
+  internal_port = 4600
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

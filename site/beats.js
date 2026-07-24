@@ -125,6 +125,20 @@
     }
   }
 
+  function renderSweep(out, data) {
+    var pairs = data.pairs || [];
+    var head = el('div', 'confline', pairs.length + ' similar-passage pairs above threshold ' + (data.threshold || '') + ' — candidates, honestly labeled: confirming them as contradictions takes a model at CAIRN\u2019s side.');
+    out.appendChild(head); reveal(head, 0);
+    pairs.slice(0, 5).forEach(function (p, i) {
+      var row = el('div', 'hitrow');
+      var t = (p.a && p.a.note ? p.a.note : '?') + '  \u2194  ' + (p.b && p.b.note ? p.b.note : '?');
+      row.appendChild(el('div', 'hit-title', t));
+      row.appendChild(el('div', 'hit-note', 'similarity ' + (p.sim || p.similarity) + (p.both_controlled ? '  \u00b7  BOTH CONTROLLED \u2014 the worst kind' : '')));
+      if (p.a && p.a.heading) row.appendChild(el('div', 'hit-snippet', p.a.heading + '  \u2194  ' + (p.b.heading || '')));
+      out.appendChild(row); reveal(row, i + 1);
+    });
+  }
+
   // ── instrument wiring ──────────────────────────────────────────────────────
   document.querySelectorAll('[data-beat]').forEach(function (beat) {
     var kind = beat.getAttribute('data-beat');
@@ -146,6 +160,11 @@
         if (kind === 'cards') {
           data = await call(base, '/api/cards', undefined, onWake);
           renderCards(out, data);
+          rawToggle(out, data);
+          if (actNum) completeAct(actNum);
+        } else if (kind === 'sweep') {
+          data = await call(base, '/api/contradictions', {}, onWake);
+          renderSweep(out, data);
           rawToggle(out, data);
           if (actNum) completeAct(actNum);
         } else {

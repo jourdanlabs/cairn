@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CAIRN Data — metric integrity. The semantic layer is the law.</title>
-<meta name="description" content="A guided demonstration: metric definition cards with provenance, definition drift between governed semantic-layer definitions and the documents orbiting them, and refusal of metrics nobody defined.">
+<meta name="description" content="A guided demonstration: metric definition cards with provenance, live definition-drift detection, and refusal of metrics nobody defined.">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="stylesheet" href="../canon.css">
 </head>
 <body data-base="https://data.cairnsemantics.com">
@@ -26,7 +27,7 @@
       <b>The semantic layer is the law; CAIRN audits everything that cites the law.</b></p>
       <div class="placard">
         <div class="p-label">How this room works</div>
-        <p>Three acts, each performed <i>live</i> by the box behind this page — nothing is
+        <p>Four acts, each performed <i>live</i> by the box behind this page — nothing is
         mocked, and every response's raw JSON is one toggle away. Complete an act to open
         the next. The finale is yours to cause: a refusal, sealed to a hash-chained ledger,
         that you then verify with your own hands.</p>
@@ -36,7 +37,11 @@
     </div>
 
     <ol class="rail glass-soft" hidden>
-      <li>I · the card shelf</li><li>II · the loaded question</li><li>III · the refusal</li><li>the doors</li>
+      <li>I · the card shelf</li>
+      <li>II · the loaded question</li>
+      <li>III · the sweep</li>
+      <li>IV · the refusal</li>
+      <li>the doors</li>
     </ol>
 
     <section class="act glass panel" hidden>
@@ -44,11 +49,10 @@
       <h2>The metric cards</h2>
       <div class="placard"><div class="p-label">Placard</div><p>This corpus defines ARR three ways: a governed semantic-layer definition, a
       Finance wiki that copied it and drifted, and an analyst crib sheet with folk math. The
-      cards on this shelf record <i>every</i> definition, each attributed to its source —
-      never merged, never averaged — and every unverifiable extraction was dropped and
-      counted when the cards were sealed.</p></div>
+      cards record <i>every</i> definition, each attributed to its source — never merged,
+      never averaged — with every unverifiable extraction dropped and counted at sealing.</p></div>
       <div class="beat" data-beat="cards" style="margin-top:16px">
-        <div class="seal">arr · nrr · <b>every definition, with its source</b> · dropped facts counted</div>
+        <div class="seal">arr · nrr · every definition, with its source · dropped facts counted</div>
         <button class="beat-run" style="margin-top:12px">Open the card shelf — live →</button>
         <div class="beat-out"></div>
       </div>
@@ -67,11 +71,25 @@
       </div>
     </section>
     <section class="act glass panel" hidden>
-      <span class="eyebrow">Act III — the refusal</span>
+      <span class="eyebrow">Act III — the sweep</span>
+      <h2>The drift detector</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>This box ships with pre-baked passage vectors, so the sweep runs live and
+      model-free: every pair of passages across the corpus whose similarity crosses the
+      threshold surfaces as a <i>candidate</i> — honestly labeled, because confirming a
+      candidate as a true contradiction takes a model at CAIRN's side. Watch it find the
+      governed definition and its drifted copy.</p></div>
+      <div class="beat" data-beat="sweep" style="margin-top:16px">
+        <div class="seal">similar-passage pairs, live · candidates honestly labeled</div>
+        <button class="beat-run" style="margin-top:12px">Run the contradiction sweep — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act IV — the refusal</span>
       <h2>The metric nobody defined</h2>
       <div class="placard"><div class="p-label">Placard</div><p>No document in this corpus defines CAC payback — we made sure of it. Ask
       anyway. Where a chatbot would improvise a plausible formula, this box refuses by
-      arithmetic and seals the refusal into its ledger — then you verify the chain.</p></div>
+      arithmetic and seals the refusal — then you verify the chain.</p></div>
       <div class="beat" data-beat="ask" data-q="What is our CAC payback period definition?" style="margin-top:16px">
         <div class="seal"><b>refused</b> · nothing invented · seals itself · <span class="ref">you verify the chain</span></div>
         <button class="beat-run" style="margin-top:12px">Ask for the metric nobody defined →</button>
@@ -82,9 +100,8 @@
     <section class="act glass doors-panel" hidden>
       <span class="eyebrow">The doors</span>
       <h2>The room is yours</h2>
-      <p class="lede" style="max-width:560px;margin:14px auto 0">Three definitions surfaced, both sides of a loaded question cited, and a
-      refusal you caused and then verified. The full map room is open — search the corpus,
-      read the cards, pull the receipts.</p>
+      <p class="lede" style="max-width:560px;margin:14px auto 0">Three definitions surfaced, both sides of a loaded question cited, the drift
+      caught live, and a refusal you caused and then verified. The full map room is open.</p>
       <div style="margin-top:8px"><a class="cta" href="https://data.cairnsemantics.com">Open the live map room →</a></div>
       <div class="eyebrow" style="margin-top:14px">synthetic corpus · Brightpath Software · no signup</div>
       <div class="quick glass-soft" style="text-align:left">

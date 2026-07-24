@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAIRN Energy — process-safety document integrity. The control room.</title>
+<meta name="description" content="A guided demonstration: MOC cards where OPEN means no completion evidence, an SOP-vs-MOC conflict between two controlled documents caught live, and refusal of standards clauses that do not exist in the document set.">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="stylesheet" href="../canon.css">
+</head>
+<body data-base="https://energy.cairnsemantics.com">
+
+<div class="bg" aria-hidden="true"><img src="../heroes/energy.jpg" alt="" class="on"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+
+<main class="page">
+  <div class="wrap">
+
+    <div class="glass panel">
+      <a class="back" href="/">← Cairn Semantics</a>
+      <span class="eyebrow" style="margin-top:18px">Energy edition · process-safety document integrity</span>
+      <h1>The control room</h1>
+      <p class="lede">Every year a named person signs a certification that the operating procedures are
+      current and accurate. Then an MOC changes the purge time, the SOP never gets revised,
+      and the crews drift — the exact finding investigators write after the worst day.
+      CAIRN reads the controlled set the way an auditor would: <b>a required action with no
+      completion evidence is OPEN — never assumed done.</b></p>
+      <div class="placard">
+        <div class="p-label">How this room works</div>
+        <p>Four acts, each performed <i>live</i> by the box behind this page — nothing is
+        mocked, and every response's raw JSON is one toggle away. Complete an act to open
+        the next. The finale is yours to cause: a refusal, sealed to a hash-chained ledger,
+        that you then verify with your own hands.</p>
+      </div>
+      <button class="beat-run begin" id="begin">Begin the demonstration →</button>
+      <div style="margin-top:10px"><button class="skip">or skip the tour and see everything</button></div>
+    </div>
+
+    <ol class="rail glass-soft" hidden>
+      <li>I · the card shelf</li>
+      <li>II · the unit speaks</li>
+      <li>III · the sweep</li>
+      <li>IV · the refusal</li>
+      <li>the doors</li>
+    </ol>
+
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act I — the card shelf</span>
+      <h2>The MOC card</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>The shelf holds cards sealed from the controlled set: MOC-2026-018, whose
+      follow-up to revise SOP-300-12 shows <i>no completion evidence — status OPEN</i>, quoted
+      verbatim; and the SOP's own card with every numeric limit carried exactly, units and
+      all. Counts and receipts are live.</p></div>
+      <div class="beat" data-beat="cards" style="margin-top:16px">
+        <div class="seal">moc-2026-018 · sop-300-12 · OPEN until proven closed</div>
+        <button class="beat-run" style="margin-top:12px">Open the card shelf — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act II — the unit speaks</span>
+      <h2>The unit speaks</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>The SOP says thirty minutes. The approved MOC says fifteen. Ask the document
+      set what the purge time is — and watch both answers come back, cited to their
+      documents, the conflict visible instead of averaged away. This is the question a crew
+      asks at 2 AM.</p></div>
+      <div class="beat" data-beat="ask" data-q="What is the nitrogen purge time for Unit 300?" style="margin-top:16px">
+        <div class="seal">sop-300-12 ↔ moc-2026-018 · both answers, cited</div>
+        <button class="beat-run" style="margin-top:12px">Ask the document set — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act III — the sweep</span>
+      <h2>Two controlled documents disagree</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>Pre-baked passage vectors make the sweep live and model-free: similar-passage
+      pairs surface as <i>candidates</i>, and pairs where <b>both documents are controlled</b>
+      are flagged as the worst kind — the exact condition a PSM signer certifies against.
+      Watch the SOP and the MOC find each other.</p></div>
+      <div class="beat" data-beat="sweep" style="margin-top:16px">
+        <div class="seal">controlled ↔ controlled · the pair the signer fears</div>
+        <button class="beat-run" style="margin-top:12px">Run the contradiction sweep — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act IV — the refusal</span>
+      <h2>The clause that does not exist</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>That standards clause exists nowhere in this document set — we made sure of
+      it. Ask anyway. Where a chatbot would paraphrase something plausible about flare
+      headers, this box refuses by arithmetic and seals the refusal — then you verify the
+      chain.</p></div>
+      <div class="beat" data-beat="ask" data-q="What does API RP 521 section 5.3 require for our flare header?" style="margin-top:16px">
+        <div class="seal"><b>refused</b> · nothing invented · seals itself · <span class="ref">you verify the chain</span></div>
+        <button class="beat-run" style="margin-top:12px">Ask about the clause never written →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+
+    <section class="act glass doors-panel" hidden>
+      <span class="eyebrow">The doors</span>
+      <h2>The room is yours</h2>
+      <p class="lede" style="max-width:560px;margin:14px auto 0">The OPEN follow-up surfaced verbatim, both purge times came back cited, two
+      controlled documents found each other live, and the invented clause was refused —
+      sealed, verified, by you. The full control room is open.</p>
+      <div style="margin-top:8px"><a class="cta" href="https://energy.cairnsemantics.com">Open the live control room →</a></div>
+      <div class="eyebrow" style="margin-top:14px">synthetic unit · Unit 300 Amine Treating · no signup</div>
+      <div class="quick glass-soft" style="text-align:left">
+<span class="c"># everything you just did, as curls:</span><br>
+curl -s -X POST https://energy.cairnsemantics.com/api/answer \<br>
+&nbsp;&nbsp;-H 'content-type: application/json' \<br>
+&nbsp;&nbsp;-d '{"q":"What does API RP 521 section 5.3 require for our flare header?"}'<br>
+curl -s https://energy.cairnsemantics.com/api/ledger/verify
+      </div>
+    </section>
+
+    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration unit is entirely fictional</footer>
+  </div>
+</main>
+
+<script src="../beats.js" defer></script>
+</body>
+</html>

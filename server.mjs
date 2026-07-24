@@ -173,8 +173,12 @@ function contextsFrom(hits, kctx = 6) {
 }
 
 // Semantic scores for a query when the index is embedded (enables hybrid search).
+// A cache-only box has chunk vectors but no way to embed the QUERY — search falls
+// back to lexical (null) while contradictions keep their vectors. Any embed-endpoint
+// hiccup likewise degrades to lexical instead of failing the search.
 async function semFor(q) {
-  return INDEX?.embedded ? semanticScores(INDEX, await embedQuery(q)) : null;
+  if (!INDEX?.embedded || !modelEnabled()) return null;
+  try { return semanticScores(INDEX, await embedQuery(q)); } catch { return null; }
 }
 
 const sha256 = (o) => createHash('sha256').update(typeof o === 'string' ? o : JSON.stringify(o)).digest('hex');
@@ -322,7 +326,10 @@ const server = createServer(async (req, res) => {
         built_at: INDEX?.builtAt || null,
         ai: modelEnabled(),
         embedded: Boolean(INDEX?.embedded),
-        search_mode: INDEX?.embedded ? 'hybrid (BM25 + semantic)' : 'lexical (BM25)',
+        // hybrid needs QUERY embeddings (an endpoint); baked chunk vectors alone give
+        // live contradictions but lexical search — say exactly which.
+        search_mode: INDEX?.embedded && modelEnabled() ? 'hybrid (BM25 + semantic)' : 'lexical (BM25)',
+        contradictions_ready: Boolean(INDEX?.embedded),
         ready: Boolean(INDEX),
         auth: AUTH.open ? 'open' : 'closed',
         ledger: LEDGER.count(),

@@ -65,3 +65,18 @@ test('default (no env): CORS fully off — no headers even for a polite origin',
     assert.equal(r.headers.get('access-control-allow-origin'), null);
   } finally { child.kill(); }
 });
+
+test('EMBEDDINGS=cache: baked vectors → contradictions live, search honestly lexical', async () => {
+  // Bake a cache with a real embed run is out of scope here; assert the honest-degrade
+  // path: cache-only with NO cache → lexical, embedded:false, contradictions unavailable.
+  const { child, base } = await bootServer({ EMBEDDINGS: 'cache' });
+  try {
+    const st = await (await fetch(`${base}/api/status`)).json();
+    assert.equal(st.embedded, false, 'no cache → not embedded');
+    assert.match(st.search_mode, /lexical/);
+    assert.equal(st.contradictions_ready, false);
+    // search must WORK (not 500) in cache mode
+    const s = await (await fetch(`${base}/api/search`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ q: 'widget assembly' }) })).json();
+    assert.ok(Array.isArray(s.hits));
+  } finally { child.kill(); }
+});

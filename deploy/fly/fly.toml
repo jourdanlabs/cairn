@@ -20,7 +20,7 @@ primary_region = "ord"
   # integration) — the namespaced form survives.
   CAIRN_VAULT_DIR = "/app/demo/matter-sample"
   CAIRN_STATE_DIR = "/app/deploy/fly/state"   # ships the sealed ledger + cards receipts
-  EMBEDDINGS = "off"
+  EMBEDDINGS = "cache"
   WATCH = "off"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com"
 
