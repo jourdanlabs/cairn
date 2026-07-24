@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CAIRN Law — matter integrity. A pin cite, enforced by a machine.</title>
-<meta name="description" content="Witness cards with mechanically verified quotes, testimony-vs-exhibit contradictions surfaced with pin cites, and structural refusal of citations that don't exist in the matter file.">
+<meta name="description" content="A guided demonstration: witness cards with mechanically verified quotes, testimony-vs-exhibit contradictions with pin cites, and structural refusal of citations that do not exist in the matter file.">
 <link rel="stylesheet" href="../canon.css">
 </head>
 <body data-base="https://law.cairnsemantics.com">
@@ -14,6 +14,7 @@
 
 <main class="page">
   <div class="wrap">
+
     <div class="glass panel">
       <a class="back" href="/">← Cairn Semantics</a>
       <span class="eyebrow" style="margin-top:18px">Law edition · matter integrity</span>
@@ -23,51 +24,80 @@
       on the record, with a hash-sealed receipt. And inside the file, it does the work of a
       tireless second chair: every fact on a witness card carries a verbatim quote,
       mechanically verified against the record. <b>A pin cite, enforced by a machine.</b></p>
-
-      <div class="beats">
-        <div class="beat glass-soft" data-beat="cards">
-          <h3>Exhibit — the witness card</h3>
-          <p>This card was distilled and sealed by CAIRN with a local model at its side — every
-          fact survived character-level quote verification, and the extraction that couldn't
-          produce its quote was dropped and counted. The card ships in the matter file;
-          search it live. <i>(The public box runs model-free by design, so card distillation
-          runs in your own deployment, not here.)</i></p>
-          <div class="seal">daniel-hargrove · <b>8 facts verified</b> · 1 dropped: "quote not found verbatim"</div>
-          <button class="beat-run">Open the card shelf — live →</button>
-          <div class="beat-out"></div>
-        </div>
-        <div class="beat glass-soft" data-beat="ask" data-q="When does Hargrove say he inspected the shipment, and what does Exhibit 12 say?">
-          <h3>Beat two — the inconsistency</h3>
-          <p>He testified he inspected the shipment March 12. His own March 14 email says the
-          crates were still unopened. CAIRN lays the contradiction out with citations to both.</p>
-          <div class="seal">depo-hargrove.md ↔ exhibit-12-email.md · attributed, never characterized</div>
-          <button class="beat-run">Ask the matter file — live →</button>
-          <div class="beat-out"></div>
-        </div>
-        <div class="beat glass-soft" data-beat="ask" data-q="What did the court hold in Zenith Corp v. Balfour?">
-          <h3>Beat three — the refusal</h3>
-          <p>Ask what the court held in <i>Zenith Corp v. Balfour</i> — a case that exists
-          nowhere in the record. The refusal is arithmetic, and it seals itself.</p>
-          <div class="seal"><b>refused</b> · well under the floor · sealed to the ledger · <span class="ref">chain verifies live</span></div>
-          <button class="beat-run">Ask about the case that doesn't exist →</button>
-          <div class="beat-out"></div>
-        </div>
+      <div class="placard">
+        <div class="p-label">How this room works</div>
+        <p>Three acts, each performed <i>live</i> by the box behind this page — nothing is
+        mocked, and every response's raw JSON is one toggle away. Complete an act to open
+        the next. The finale is yours to cause: a refusal, sealed to a hash-chained ledger,
+        that you then verify with your own hands.</p>
       </div>
+      <button class="beat-run begin" id="begin">Begin the demonstration →</button>
+      <div style="margin-top:10px"><button class="skip">or skip the tour and see everything</button></div>
+    </div>
 
-      <div class="quick glass-soft">
-<span class="c"># reproduce beat three yourself:</span><br>
+    <ol class="rail glass-soft" hidden>
+      <li>I · the card shelf</li><li>II · the inconsistency</li><li>III · the refusal</li><li>the doors</li>
+    </ol>
+
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act I — the card shelf</span>
+      <h2>The witness card</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>Before anything runs: what you're about to open is real. The matter file on this
+      box carries knowledge cards CAIRN distilled and sealed — every fact on them survived
+      character-level quote verification against the record, and the extraction that couldn't
+      produce its quote was <i>dropped, and counted</i>. The box you're touching runs
+      model-free by design, so distillation happens in your own deployment — but the shelf,
+      the counts, and the receipts are live.</p></div>
+      <div class="beat" data-beat="cards" style="margin-top:16px">
+        <div class="seal">daniel-hargrove · <b>8 facts verified</b> · 1 dropped: "quote not found verbatim"</div>
+        <button class="beat-run" style="margin-top:12px">Open the card shelf — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act II — the inconsistency</span>
+      <h2>The inconsistency</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>The witness testified he inspected the shipment on March 12. His own March 14
+      email says the crates were still unopened. You're about to ask the matter file the
+      question a second chair would ask — and watch it return the passages from <i>both</i>
+      documents, cited, attributed, never characterized.</p></div>
+      <div class="beat" data-beat="ask" data-q="When does Hargrove say he inspected the shipment, and what does Exhibit 12 say?" style="margin-top:16px">
+        <div class="seal">depo-hargrove.md ↔ exhibit-12-email.md · attributed, never characterized</div>
+        <button class="beat-run" style="margin-top:12px">Ask the matter file — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act III — the refusal</span>
+      <h2>The case that does not exist</h2>
+      <div class="placard"><div class="p-label">Placard</div><p><i>Zenith Corp v. Balfour</i> appears nowhere in this record — we invented it.
+      Ask anyway. The refusal you're about to cause is arithmetic, not model judgment; it will
+      seal itself into the box's hash-chained ledger the moment it happens — and then you can
+      verify the chain your own refusal just became part of.</p></div>
+      <div class="beat" data-beat="ask" data-q="What did the court hold in Zenith Corp v. Balfour?" style="margin-top:16px">
+        <div class="seal"><b>refused</b> · zero citations · seals itself · <span class="ref">you verify the chain</span></div>
+        <button class="beat-run" style="margin-top:12px">Ask about the case that doesn't exist →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+
+    <section class="act glass doors-panel" hidden>
+      <span class="eyebrow">The doors</span>
+      <h2>The room is yours</h2>
+      <p class="lede" style="max-width:560px;margin:14px auto 0">You watched it cite what the record holds and refuse what it doesn't — and you
+      verified the ledger your own refusal sealed into. The full matter room is open: search the
+      record yourself, read the cards, pull the receipts.</p>
+      <div style="margin-top:8px"><a class="cta" href="https://law.cairnsemantics.com">Open the live matter room →</a></div>
+      <div class="eyebrow" style="margin-top:14px">synthetic matter · Meridian v. Copperline · no signup</div>
+      <div class="quick glass-soft" style="text-align:left">
+<span class="c"># everything you just did, as curls:</span><br>
 curl -s -X POST https://law.cairnsemantics.com/api/answer \<br>
 &nbsp;&nbsp;-H 'content-type: application/json' \<br>
 &nbsp;&nbsp;-d '{"q":"What did the court hold in Zenith Corp v. Balfour?"}'<br>
-<span class="c"># then verify the ledger it sealed itself into:</span><br>
 curl -s https://law.cairnsemantics.com/api/ledger/verify
       </div>
+    </section>
 
-      <div class="cta-row">
-        <a class="cta" href="https://law.cairnsemantics.com">Open the live matter room →</a>
-        <span class="eyebrow">synthetic matter · Meridian v. Copperline · no signup</span>
-      </div>
-    </div>
     <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration matter is entirely fictional</footer>
   </div>
 </main>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CAIRN Civic — public record integrity. The record hall.</title>
-<meta name="description" content="Adopted law vs published code, contradictions confirmed with record cites, ordinance cards with verbatim operative language, and refusal of ordinances that were never adopted.">
+<meta name="description" content="A guided demonstration: adopted law vs published code, ordinance cards with verbatim operative language, and refusal of ordinances that were never adopted.">
 <link rel="stylesheet" href="../canon.css">
 </head>
 <body data-base="https://civic.cairnsemantics.com">
@@ -14,59 +14,89 @@
 
 <main class="page">
   <div class="wrap">
+
     <div class="glass panel">
       <a class="back" href="/">← Cairn Semantics</a>
       <span class="eyebrow" style="margin-top:18px">Civic edition · public record integrity</span>
       <h1>The record hall</h1>
-      <p class="lede">A city chatbot once told business owners to break the law, confidently.
-      The public record deserves better: a system that answers only from the adopted record,
-      cites what it answers, and refuses what was never adopted. And because codification
-      always lags, CAIRN finds where your published code disagrees with your adopted law —
-      <b>before a resident's lawyer does.</b></p>
-
-      <div class="beats">
-        <div class="beat glass-soft" data-beat="cards">
-          <h3>Exhibit — the ordinance card</h3>
-          <p>The card on Ordinance 2026-04 ships in the record — operative language quoted
-          exactly, the ninety-day cap, the roll-call vote by name, the effective date — every
-          fact verified against the record when it was sealed. Search it live. <i>(Card
-          distillation needs a model at CAIRN's side; the public box runs model-free.)</i></p>
-          <div class="seal">ordinance-2026-04 · <b>verbatim operative language</b> · vote by name · adopted/</div>
-          <button class="beat-run">Open the card shelf — live →</button>
-          <div class="beat-out"></div>
-        </div>
-        <div class="beat glass-soft" data-beat="ask" data-q="What is the short-term rental cap in Alder Creek?">
-          <h3>Beat two — the codification lag</h3>
-          <p>The adopted ordinance cut the short-term-rental cap to ninety days. The published
-          Chapter 5 still says one hundred twenty. The record itself carries the conflict;
-          with a local model at CAIRN's side, adjudication confirms it and the hash-sealed
-          score drops.</p>
-          <div class="seal"><b>drift</b> · § 5-210 · adopted 90 vs codified 120 · <span class="ref">adjudicated run: confirmed</span></div>
-          <button class="beat-run">Ask the record — live →</button>
-          <div class="beat-out"></div>
-        </div>
-        <div class="beat glass-soft" data-beat="ask" data-q="What does Ordinance 2026-11 require?">
-          <h3>Beat three — the refusal</h3>
-          <p>Ask what "Ordinance 2026-11" requires. No such ordinance was ever adopted —
-          so the answer is a refusal, sealed to the ledger. The answer the chatbot couldn't give.</p>
-          <div class="seal"><b>refused</b> · Ordinance 2026-11 · zero citations · sealed to the ledger · <span class="ref">chain verifies live</span></div>
-          <button class="beat-run">Ask about the ordinance never adopted →</button>
-          <div class="beat-out"></div>
-        </div>
+      <p class="lede">A city chatbot once told business owners to break the law, confidently. The public
+      record deserves better: a system that answers only from the adopted record, cites what
+      it answers, and refuses what was never adopted. And because codification always lags,
+      CAIRN finds where your published code disagrees with your adopted law — <b>before a
+      resident's lawyer does.</b></p>
+      <div class="placard">
+        <div class="p-label">How this room works</div>
+        <p>Three acts, each performed <i>live</i> by the box behind this page — nothing is
+        mocked, and every response's raw JSON is one toggle away. Complete an act to open
+        the next. The finale is yours to cause: a refusal, sealed to a hash-chained ledger,
+        that you then verify with your own hands.</p>
       </div>
+      <button class="beat-run begin" id="begin">Begin the demonstration →</button>
+      <div style="margin-top:10px"><button class="skip">or skip the tour and see everything</button></div>
+    </div>
 
-      <div class="quick glass-soft">
-<span class="c"># the anti-chatbot beat — an ordinance that was never adopted:</span><br>
+    <ol class="rail glass-soft" hidden>
+      <li>I · the card shelf</li><li>II · the record speaks</li><li>III · the refusal</li><li>the doors</li>
+    </ol>
+
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act I — the card shelf</span>
+      <h2>The ordinance card</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>The shelf holds cards sealed from the adopted record: Ordinance 2026-04 with
+      its operative language quoted exactly — the ninety-day cap, the roll-call vote by name,
+      the effective date — and an official's card built the same way. Every fact survived
+      verbatim-quote verification when it was sealed; the counts and receipts you're about
+      to open are live.</p></div>
+      <div class="beat" data-beat="cards" style="margin-top:16px">
+        <div class="seal">ordinance-2026-04 · dara-okonkwo · <b>verbatim operative language</b> · vote by name</div>
+        <button class="beat-run" style="margin-top:12px">Open the card shelf — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act II — the record speaks</span>
+      <h2>The record speaks</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>The adopted ordinance cut the short-term-rental cap to ninety days. The
+      published Chapter 5 still says one hundred twenty — codification lag, the clerk's
+      quiet nightmare. Ask the record what the cap is, and watch the passages come back
+      cited to the adopted law.</p></div>
+      <div class="beat" data-beat="ask" data-q="What is the short-term rental cap in Alder Creek?" style="margin-top:16px">
+        <div class="seal">§ 5-210 · adopted 90 vs codified 120 · the record carries the conflict</div>
+        <button class="beat-run" style="margin-top:12px">Ask the record — live →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+    <section class="act glass panel" hidden>
+      <span class="eyebrow">Act III — the refusal</span>
+      <h2>The ordinance never adopted</h2>
+      <div class="placard"><div class="p-label">Placard</div><p>No Ordinance 2026-11 was ever adopted in Alder Creek — we made sure of it.
+      Ask what it requires. Where the infamous city chatbot would confidently invent law,
+      this box refuses on the record and seals the refusal — then you verify the chain your
+      question just became part of.</p></div>
+      <div class="beat" data-beat="ask" data-q="What does Ordinance 2026-11 require?" style="margin-top:16px">
+        <div class="seal"><b>refused</b> · zero citations · seals itself · <span class="ref">you verify the chain</span></div>
+        <button class="beat-run" style="margin-top:12px">Ask about the ordinance never adopted →</button>
+        <div class="beat-out"></div>
+      </div>
+    </section>
+
+    <section class="act glass doors-panel" hidden>
+      <span class="eyebrow">The doors</span>
+      <h2>The room is yours</h2>
+      <p class="lede" style="max-width:560px;margin:14px auto 0">The record answered with citations, carried its own conflict honestly, and
+      refused the ordinance that never existed — sealed, verified, by you. The full record
+      hall is open.</p>
+      <div style="margin-top:8px"><a class="cta" href="https://civic.cairnsemantics.com">Open the live record hall →</a></div>
+      <div class="eyebrow" style="margin-top:14px">synthetic town · Alder Creek · no signup</div>
+      <div class="quick glass-soft" style="text-align:left">
+<span class="c"># everything you just did, as curls:</span><br>
 curl -s -X POST https://civic.cairnsemantics.com/api/answer \<br>
 &nbsp;&nbsp;-H 'content-type: application/json' \<br>
-&nbsp;&nbsp;-d '{"q":"What does Ordinance 2026-11 require?"}'
+&nbsp;&nbsp;-d '{"q":"What does Ordinance 2026-11 require?"}'<br>
+curl -s https://civic.cairnsemantics.com/api/ledger/verify
       </div>
+    </section>
 
-      <div class="cta-row">
-        <a class="cta" href="https://civic.cairnsemantics.com">Open the live record hall →</a>
-        <span class="eyebrow">synthetic town · Alder Creek · no signup</span>
-      </div>
-    </div>
     <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration town is entirely fictional</footer>
   </div>
 </main>
