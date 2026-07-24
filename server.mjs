@@ -52,6 +52,8 @@ const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.
 // Compliance: top-level folders whose notes are "controlled" (authoritative).
 const CONTROLLED_DIRS = (process.env.CONTROLLED_DIRS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const WATCH = (process.env.WATCH || 'on').toLowerCase() !== 'off';
+// Browser origins allowed to call this box cross-origin. Empty = no CORS (default).
+const CORS_ORIGINS = new Set((process.env.CAIRN_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.json': 'application/json' };
 
@@ -228,8 +230,26 @@ function scheduleReindex() {
 
 const server = createServer(async (req, res) => {
   try {
-    // AuthZ gate — every known API route needs a permission; open mode passes all.
     const reqPath = req.url.split('?')[0];
+
+    // CORS — OFF unless origins are explicitly allow-listed (CAIRN_CORS_ORIGINS,
+    // comma-separated; never a wildcard). Lets a trusted site — the cairnsemantics
+    // demo rooms — run the beats live in the visitor's browser against this box.
+    // Preflights are answered before the auth gate (they carry no credentials by
+    // spec); actual requests still pass the gate like any other.
+    const origin = req.headers.origin;
+    if (origin && CORS_ORIGINS.has(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      if (req.method === 'OPTIONS') {
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'content-type, x-api-key');
+        res.setHeader('Access-Control-Max-Age', '86400');
+        res.writeHead(204); return res.end();
+      }
+    }
+
+    // AuthZ gate — every known API route needs a permission; open mode passes all.
     const perm = permissionFor(req.method, reqPath);
     if (perm) {
       const g = await AUTH.gate(req, perm);

@@ -18,6 +18,7 @@ primary_region = "ord"
   CAIRN_STATE_DIR = "/app/deploy/fly-civic/state"
   EMBEDDINGS = "off"
   WATCH = "off"
+  CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com"
 
 [http_service]
   internal_port = 4600
