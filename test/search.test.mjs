@@ -225,3 +225,20 @@ test('confidence never exceeds 1.0 even with phrase boost on the blended score',
     assert.ok(r.confidence <= 1, `confidence must clamp at 1, got ${r.confidence}`);
   } finally { rmVault(dir); }
 });
+
+test('compound identifiers: a fabricated ordinance number refuses, the real one hits', async () => {
+  // "Ordinance 2026-11" fragments into ordinance/2026/11 — and "2026" is in every date,
+  // so the fabricated ID sailed through the gate on its common parts (live civic-box
+  // regression). The joined compound token is the distinctive signal.
+  const { index, dir } = await idx({
+    'ord.md': `# Ordinance 2026-04\n\nOrdinance 2026-04, adopted March 10, 2026, amends section 5-210 to require a ninety day annual cap, effective April 15, 2026.\n`,
+    'min.md': `# Minutes 2026-03-10\n\nOn March 10, 2026 the council adopted Ordinance 2026-04 by roll call vote; the ordinance requires permit holders to comply after the 2026 budget update.\n`,
+  });
+  try {
+    const fake = search(index, 'What does Ordinance 2026-11 require?', { k: 5, strictness: 0.75 });
+    assert.equal(fake.weak, true, `fabricated compound ID must refuse, got conf ${fake.confidence}`);
+    const real = search(index, 'What does Ordinance 2026-04 require?', { k: 5, strictness: 0.75 });
+    assert.equal(real.weak, false, `real compound ID must answer, got conf ${real.confidence}`);
+    assert.ok(real.confidence > fake.confidence + 0.2, 'real ID must clearly beat fabricated');
+  } finally { rmVault(dir); }
+});
