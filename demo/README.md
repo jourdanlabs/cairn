@@ -61,7 +61,7 @@ curl -s -X POST localhost:4640/api/consolidate \
   -d '{"entity":"ARR","kind":"metric"}'
 
 # the contradiction sweep — governed definition vs the drift orbiting it
-curl -s localhost:4640/api/integrity
+curl -s -X POST localhost:4640/api/integrity -H 'content-type: application/json' -d '{"adjudicate":true}'
 
 # the refusal — a metric nobody ever defined
 curl -s -X POST localhost:4640/api/answer -H 'content-type: application/json' \
