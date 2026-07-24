@@ -7,7 +7,7 @@
 <meta name="description" content="Adopted law vs published code, contradictions confirmed with record cites, ordinance cards with verbatim operative language, and refusal of ordinances that were never adopted.">
 <link rel="stylesheet" href="../canon.css">
 </head>
-<body>
+<body data-base="https://civic.cairnsemantics.com">
 
 <div class="bg" aria-hidden="true"><img src="../heroes/civic.jpg" alt="" class="on"></div>
 <div class="bg-veil" aria-hidden="true"></div>
@@ -25,27 +25,33 @@
       <b>before a resident's lawyer does.</b></p>
 
       <div class="beats">
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="cards">
           <h3>Exhibit — the ordinance card</h3>
           <p>The card on Ordinance 2026-04 ships in the record — operative language quoted
           exactly, the ninety-day cap, the roll-call vote by name, the effective date — every
           fact verified against the record when it was sealed. Search it live. <i>(Card
           distillation needs a model at CAIRN's side; the public box runs model-free.)</i></p>
           <div class="seal">ordinance-2026-04 · <b>verbatim operative language</b> · vote by name · adopted/</div>
+          <button class="beat-run">Open the card shelf — live →</button>
+          <div class="beat-out"></div>
         </div>
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="ask" data-q="What is the short-term rental cap in Alder Creek?">
           <h3>Beat two — the codification lag</h3>
           <p>The adopted ordinance cut the short-term-rental cap to ninety days. The published
           Chapter 5 still says one hundred twenty. The record itself carries the conflict;
           with a local model at CAIRN's side, adjudication confirms it and the hash-sealed
           score drops.</p>
           <div class="seal"><b>drift</b> · § 5-210 · adopted 90 vs codified 120 · <span class="ref">adjudicated run: confirmed</span></div>
+          <button class="beat-run">Ask the record — live →</button>
+          <div class="beat-out"></div>
         </div>
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="ask" data-q="What does Ordinance 2026-11 require?">
           <h3>Beat three — the refusal</h3>
           <p>Ask what "Ordinance 2026-11" requires. No such ordinance was ever adopted —
           so the answer is a refusal, sealed to the ledger. The answer the chatbot couldn't give.</p>
           <div class="seal"><b>refused</b> · Ordinance 2026-11 · zero citations · sealed to the ledger · <span class="ref">chain verifies live</span></div>
+          <button class="beat-run">Ask about the ordinance never adopted →</button>
+          <div class="beat-out"></div>
         </div>
       </div>
 
@@ -65,5 +71,6 @@ curl -s -X POST https://civic.cairnsemantics.com/api/answer \<br>
   </div>
 </main>
 
+<script src="../beats.js" defer></script>
 </body>
 </html>

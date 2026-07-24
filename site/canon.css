@@ -85,3 +85,30 @@ footer{padding:28px 0 40px;text-align:center;color:var(--ink-soft);font-size:.84
 footer a{color:var(--brass-bright);text-decoration:none}
 footer a:hover{text-decoration:underline}
 @media (prefers-reduced-motion: reduce){a.card,.bg img{transition:none}}
+
+/* ── the beat-runner (live stages) ── */
+.beat-run{display:inline-block;font-family:var(--mono);font-size:.78rem;letter-spacing:.05em;
+  color:var(--brass-bright);background:transparent;border:1px solid var(--brass);border-radius:4px;
+  padding:9px 16px;cursor:pointer;transition:background .15s ease,color .15s ease;margin-top:4px}
+.beat-run:hover:not(:disabled){background:var(--brass);color:#171209}
+.beat-run:disabled{opacity:.7;cursor:wait}
+.beat-out{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.hitrow{background:color-mix(in srgb,var(--parchment) 55%,transparent);
+  border-left:2px solid var(--brass);border-radius:0 3px 3px 0;padding:9px 12px}
+.hit-title{font-size:.88rem;color:var(--ink)}
+.hit-note{font-family:var(--mono);font-size:.64rem;color:var(--sage);letter-spacing:.06em;margin-top:2px}
+.hit-snippet{font-size:.82rem;color:var(--ink-soft);margin-top:5px}
+.confline{font-family:var(--mono);font-size:.72rem;color:var(--ink-soft);padding:2px 0}
+.confline.ok{color:var(--sage)}
+.confline.bad{color:#c98a6a}
+.stamp{font-family:var(--mono);font-weight:700;font-size:1.5rem;letter-spacing:.3em;color:#c98a6a;
+  border:3px double #c98a6a;border-radius:4px;display:inline-block;padding:8px 20px 8px 24px;
+  transform:rotate(-3deg);margin:6px 0 2px;animation:stampin .35s ease}
+@keyframes stampin{0%{transform:rotate(-3deg) scale(1.6);opacity:0}100%{transform:rotate(-3deg) scale(1);opacity:1}}
+.seal-live{font-family:var(--mono);font-size:.74rem;color:var(--brass-bright);
+  border:1px dashed var(--brass);border-radius:3px;display:inline-block;padding:6px 12px}
+details.raw{margin-top:6px}
+details.raw summary{font-family:var(--mono);font-size:.66rem;color:var(--ink-soft);cursor:pointer;letter-spacing:.08em}
+details.raw pre{font-family:var(--mono);font-size:.64rem;color:var(--ink-soft);overflow-x:auto;max-height:280px;
+  background:color-mix(in srgb,var(--parchment) 60%,transparent);border:1px solid var(--rule);border-radius:3px;padding:10px;margin-top:6px}
+@media (prefers-reduced-motion: reduce){.stamp{animation:none}}

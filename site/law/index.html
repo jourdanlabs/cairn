@@ -7,7 +7,7 @@
 <meta name="description" content="Witness cards with mechanically verified quotes, testimony-vs-exhibit contradictions surfaced with pin cites, and structural refusal of citations that don't exist in the matter file.">
 <link rel="stylesheet" href="../canon.css">
 </head>
-<body>
+<body data-base="https://law.cairnsemantics.com">
 
 <div class="bg" aria-hidden="true"><img src="../heroes/law.jpg" alt="" class="on"></div>
 <div class="bg-veil" aria-hidden="true"></div>
@@ -25,7 +25,7 @@
       mechanically verified against the record. <b>A pin cite, enforced by a machine.</b></p>
 
       <div class="beats">
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="cards">
           <h3>Exhibit — the witness card</h3>
           <p>This card was distilled and sealed by CAIRN with a local model at its side — every
           fact survived character-level quote verification, and the extraction that couldn't
@@ -33,18 +33,24 @@
           search it live. <i>(The public box runs model-free by design, so card distillation
           runs in your own deployment, not here.)</i></p>
           <div class="seal">daniel-hargrove · <b>8 facts verified</b> · 1 dropped: "quote not found verbatim"</div>
+          <button class="beat-run">Open the card shelf — live →</button>
+          <div class="beat-out"></div>
         </div>
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="ask" data-q="When does Hargrove say he inspected the shipment, and what does Exhibit 12 say?">
           <h3>Beat two — the inconsistency</h3>
           <p>He testified he inspected the shipment March 12. His own March 14 email says the
           crates were still unopened. CAIRN lays the contradiction out with citations to both.</p>
           <div class="seal">depo-hargrove.md ↔ exhibit-12-email.md · attributed, never characterized</div>
+          <button class="beat-run">Ask the matter file — live →</button>
+          <div class="beat-out"></div>
         </div>
-        <div class="beat glass-soft">
+        <div class="beat glass-soft" data-beat="ask" data-q="What did the court hold in Zenith Corp v. Balfour?">
           <h3>Beat three — the refusal</h3>
           <p>Ask what the court held in <i>Zenith Corp v. Balfour</i> — a case that exists
           nowhere in the record. The refusal is arithmetic, and it seals itself.</p>
           <div class="seal"><b>refused</b> · well under the floor · sealed to the ledger · <span class="ref">chain verifies live</span></div>
+          <button class="beat-run">Ask about the case that doesn't exist →</button>
+          <div class="beat-out"></div>
         </div>
       </div>
 
@@ -66,5 +72,6 @@ curl -s https://law.cairnsemantics.com/api/ledger/verify
   </div>
 </main>
 
+<script src="../beats.js" defer></script>
 </body>
 </html>
