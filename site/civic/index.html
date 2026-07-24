@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAIRN Civic — public record integrity. The record hall.</title>
+<meta name="description" content="Adopted law vs published code, contradictions confirmed with record cites, ordinance cards with verbatim operative language, and refusal of ordinances that were never adopted.">
+<link rel="stylesheet" href="../canon.css">
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"><img src="../heroes/civic.jpg" alt="" class="on"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+
+<main class="page">
+  <div class="wrap">
+    <div class="glass panel">
+      <a class="back" href="/">← Cairn Semantics</a>
+      <span class="eyebrow" style="margin-top:18px">Civic edition · public record integrity</span>
+      <h1>The record hall</h1>
+      <p class="lede">A city chatbot once told business owners to break the law, confidently.
+      The public record deserves better: a system that answers only from the adopted record,
+      cites what it answers, and refuses what was never adopted. And because codification
+      always lags, CAIRN finds where your published code disagrees with your adopted law —
+      <b>before a resident's lawyer does.</b></p>
+
+      <div class="beats">
+        <div class="beat glass-soft">
+          <h3>Beat one — the ordinance card</h3>
+          <p>Ask for the card on Ordinance 2026-04. Operative language quoted exactly —
+          the ninety-day cap, the roll-call vote by name, the effective date — every fact
+          verified against the record.</p>
+          <div class="seal">ordinance-2026-04 · <b>verbatim operative language</b> · vote by name · adopted/</div>
+        </div>
+        <div class="beat glass-soft">
+          <h3>Beat two — the codification lag</h3>
+          <p>The adopted ordinance cut the short-term-rental cap to ninety days. The published
+          Chapter 5 still says one hundred twenty. Confirmed as a contradiction, scored,
+          hash-sealed.</p>
+          <div class="seal"><b>confirmed</b> · § 5-210 · adopted 90 vs codified 120 · sim <span class="ref">0.94</span></div>
+        </div>
+        <div class="beat glass-soft">
+          <h3>Beat three — the refusal</h3>
+          <p>Ask what "Ordinance 2026-11" requires. No such ordinance was ever adopted —
+          so the answer is a refusal, sealed to the ledger. The answer the chatbot couldn't give.</p>
+          <div class="seal"><b>refused</b> · Ordinance 2026-11 · zero citations · sealed <span class="ref">ledger&nbsp;#2</span></div>
+        </div>
+      </div>
+
+      <div class="quick glass-soft">
+<span class="c"># the anti-chatbot beat — an ordinance that was never adopted:</span><br>
+curl -s -X POST https://civic.cairnsemantics.com/api/answer \<br>
+&nbsp;&nbsp;-H 'content-type: application/json' \<br>
+&nbsp;&nbsp;-d '{"q":"What does Ordinance 2026-11 require?"}'
+      </div>
+
+      <div class="cta-row">
+        <a class="cta" href="https://civic.cairnsemantics.com">Open the live record hall →</a>
+        <span class="eyebrow">synthetic town · Alder Creek · no signup</span>
+      </div>
+    </div>
+    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration town is entirely fictional</footer>
+  </div>
+</main>
+
+</body>
+</html>

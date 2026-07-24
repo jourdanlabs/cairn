@@ -1,0 +1,95 @@
+/* Cairn Semantics — the canon stylesheet. Full-bleed painting as the world,
+   content floating on parchment glass. Shared by the landing and edition pages. */
+:root{
+  --parchment:#ece3d0; --ink:#2b2419; --ink-soft:#544a3a;
+  --brass:#8a5a20; --brass-bright:#a06b2a; --sage:#4e6b47; --rule:#cbbd9f;
+  --glass:rgba(240,232,214,.82); --glass-soft:rgba(240,232,214,.66);
+  --mono:"SF Mono",ui-monospace,Menlo,monospace;
+  --serif:"Hoefler Text","Iowan Old Style",Georgia,serif;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --parchment:#171209; --ink:#eadfc6; --ink-soft:#b3a184;
+    --brass:#d9a35c; --brass-bright:#e2b273; --sage:#93b289; --rule:#4a3d29;
+    --glass:rgba(24,18,10,.80); --glass-soft:rgba(24,18,10,.62);
+  }
+}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{color:var(--ink);font-family:var(--serif);line-height:1.6;background:var(--parchment);-webkit-font-smoothing:antialiased}
+
+/* ── the world: fixed full-bleed painting + veil ── */
+.bg{position:fixed;inset:0;z-index:-2;background:var(--parchment)}
+.bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 2.6s ease}
+.bg img.on{opacity:1}
+.bg-veil{position:fixed;inset:0;z-index:-1;
+  background:
+    radial-gradient(ellipse at 50% 30%, transparent 0%, color-mix(in srgb,var(--parchment) 34%,transparent) 70%),
+    linear-gradient(180deg, color-mix(in srgb,var(--parchment) 22%,transparent) 0%,
+      color-mix(in srgb,var(--parchment) 30%,transparent) 60%,
+      color-mix(in srgb,var(--parchment) 78%,transparent) 100%)}
+
+.wrap{max-width:920px;margin:0 auto;padding:0 22px}
+
+/* ── glass panels ── */
+.glass{background:var(--glass);backdrop-filter:blur(12px) saturate(1.05);-webkit-backdrop-filter:blur(12px) saturate(1.05);
+  border:1px solid color-mix(in srgb,var(--rule) 65%,transparent);border-radius:6px}
+.glass-soft{background:var(--glass-soft);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid color-mix(in srgb,var(--rule) 50%,transparent);border-radius:6px}
+
+/* ── identity ── */
+.mark{width:50px;height:62px;display:block;margin:0 auto 18px}
+.mark ellipse{fill:none;stroke:var(--brass-bright);stroke-width:2.5}
+h1{font-size:clamp(1.9rem,5vw,2.9rem);font-weight:600;letter-spacing:.13em;text-transform:uppercase;text-align:center}
+h1 .sem{color:var(--brass-bright);font-weight:400}
+.doctrine{margin-top:12px;text-align:center;font-size:clamp(1.05rem,2.4vw,1.3rem);font-style:italic;color:var(--ink-soft);text-wrap:balance}
+.doctrine b{color:var(--ink);font-style:normal}
+.eyebrow{font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--brass)}
+
+/* ── edition cards (landing) ── */
+.editions{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:22px}
+a.card{display:flex;flex-direction:column;gap:11px;padding:24px 22px 18px;color:inherit;text-decoration:none;
+  transition:transform .18s ease,border-color .18s ease}
+a.card:hover,a.card:focus-visible{transform:translateY(-3px);border-color:var(--brass-bright);outline-offset:3px}
+.card h2{font-size:1rem;letter-spacing:.06em;text-transform:uppercase}
+.card h2 small{display:block;font-family:var(--mono);font-size:.64rem;letter-spacing:.18em;color:var(--sage);margin-top:4px;text-transform:uppercase}
+.card p{color:var(--ink-soft);font-size:.93rem;flex:1;text-wrap:pretty}
+.card .go{font-family:var(--mono);font-size:.78rem;letter-spacing:.08em;color:var(--brass-bright);
+  border-top:1px solid color-mix(in srgb,var(--rule) 60%,transparent);padding-top:11px}
+
+/* ── receipt seal ── */
+.seal{font-family:var(--mono);font-size:.7rem;color:var(--ink-soft);
+  background:color-mix(in srgb,var(--parchment) 55%,transparent);
+  border:1px dashed color-mix(in srgb,var(--rule) 80%,transparent);border-radius:3px;
+  padding:7px 10px;overflow-x:auto;white-space:nowrap}
+.seal b{color:var(--sage);font-weight:600}.seal .ref{color:var(--brass)}
+
+/* ── tenets ── */
+.tenets{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:20px;padding:26px 26px}
+.tenet h3{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-bottom:5px}
+.tenet p{font-size:.87rem;color:var(--ink-soft);text-wrap:pretty}
+
+/* ── edition pages ── */
+.page{padding:9vh 0 12vh}
+.panel{padding:38px 40px}
+.panel h1{text-align:left}
+.panel .eyebrow{display:block;margin-bottom:10px}
+.lede{margin-top:14px;font-size:1.08rem;color:var(--ink-soft);text-wrap:pretty}
+.beats{margin-top:26px;display:flex;flex-direction:column;gap:16px}
+.beat{padding:18px 20px}
+.beat h3{font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-bottom:6px}
+.beat p{font-size:.93rem;color:var(--ink-soft);margin-bottom:10px;text-wrap:pretty}
+.cta-row{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.cta{display:inline-block;font-family:var(--mono);font-size:.85rem;letter-spacing:.06em;text-decoration:none;
+  color:var(--parchment);background:var(--brass);border-radius:4px;padding:13px 22px;transition:background .15s ease}
+.cta:hover,.cta:focus-visible{background:var(--brass-bright)}
+@media (prefers-color-scheme: dark){.cta{color:#171209}}
+.back{font-family:var(--mono);font-size:.76rem;color:var(--ink-soft);text-decoration:none}
+.back:hover{color:var(--brass-bright)}
+.quick{margin-top:26px;padding:16px 18px;font-family:var(--mono);font-size:.74rem;line-height:1.8;overflow-x:auto;color:var(--ink-soft)}
+.quick .c{color:var(--sage)}
+
+footer{padding:28px 0 40px;text-align:center;color:var(--ink-soft);font-size:.84rem}
+footer a{color:var(--brass-bright);text-decoration:none}
+footer a:hover{text-decoration:underline}
+@media (prefers-reduced-motion: reduce){a.card,.bg img{transition:none}}

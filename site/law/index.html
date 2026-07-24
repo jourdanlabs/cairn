@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAIRN Law — matter integrity. A pin cite, enforced by a machine.</title>
+<meta name="description" content="Witness cards with mechanically verified quotes, testimony-vs-exhibit contradictions surfaced with pin cites, and structural refusal of citations that don't exist in the matter file.">
+<link rel="stylesheet" href="../canon.css">
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"><img src="../heroes/law.jpg" alt="" class="on"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+
+<main class="page">
+  <div class="wrap">
+    <div class="glass panel">
+      <a class="back" href="/">← Cairn Semantics</a>
+      <span class="eyebrow" style="margin-top:18px">Law edition · matter integrity</span>
+      <h1>The gate that refuses</h1>
+      <p class="lede">Lawyers keep getting sanctioned for citations that don't exist. CAIRN is
+      architecturally incapable of citing a case that is not in the matter file — it refuses,
+      on the record, with a hash-sealed receipt. And inside the file, it does the work of a
+      tireless second chair: every fact on a witness card carries a verbatim quote,
+      mechanically verified against the record. <b>A pin cite, enforced by a machine.</b></p>
+
+      <div class="beats">
+        <div class="beat glass-soft">
+          <h3>Beat one — the witness card</h3>
+          <p>Ask for a card on Daniel Hargrove. Every fact survives character-level quote
+          verification; the extraction that couldn't produce its quote was dropped — and counted.</p>
+          <div class="seal">daniel-hargrove · <b>8 facts verified</b> · 1 dropped: "quote not found verbatim"</div>
+        </div>
+        <div class="beat glass-soft">
+          <h3>Beat two — the inconsistency</h3>
+          <p>He testified he inspected the shipment March 12. His own March 14 email says the
+          crates were still unopened. CAIRN lays the contradiction out with citations to both.</p>
+          <div class="seal">depo-hargrove.md ↔ exhibit-12-email.md · attributed, never characterized</div>
+        </div>
+        <div class="beat glass-soft">
+          <h3>Beat three — the refusal</h3>
+          <p>Ask what the court held in <i>Zenith Corp v. Balfour</i> — a case that exists
+          nowhere in the record. The refusal is arithmetic, and it seals itself.</p>
+          <div class="seal"><b>refused</b> · confidence 0.10 · sealed <span class="ref">ledger&nbsp;#3</span> · chain verifies</div>
+        </div>
+      </div>
+
+      <div class="quick glass-soft">
+<span class="c"># reproduce beat three yourself:</span><br>
+curl -s -X POST https://law.cairnsemantics.com/api/answer \<br>
+&nbsp;&nbsp;-H 'content-type: application/json' \<br>
+&nbsp;&nbsp;-d '{"q":"What did the court hold in Zenith Corp v. Balfour?"}'<br>
+<span class="c"># then verify the ledger it sealed itself into:</span><br>
+curl -s https://law.cairnsemantics.com/api/ledger/verify
+      </div>
+
+      <div class="cta-row">
+        <a class="cta" href="https://law.cairnsemantics.com">Open the live matter room →</a>
+        <span class="eyebrow">synthetic matter · Meridian v. Copperline · no signup</span>
+      </div>
+    </div>
+    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration matter is entirely fictional</footer>
+  </div>
+</main>
+
+</body>
+</html>
