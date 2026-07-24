@@ -3,7 +3,7 @@
 :root{
   --parchment:#ece3d0; --ink:#2b2419; --ink-soft:#544a3a;
   --brass:#8a5a20; --brass-bright:#a06b2a; --sage:#4e6b47; --rule:#cbbd9f;
-  --glass:rgba(240,232,214,.82); --glass-soft:rgba(240,232,214,.66);
+  --glass:rgba(242,235,219,.95); --glass-soft:rgba(242,235,219,.88);
   --mono:"SF Mono",ui-monospace,Menlo,monospace;
   --serif:"Hoefler Text","Iowan Old Style",Georgia,serif;
 }
@@ -11,7 +11,7 @@
   :root{
     --parchment:#171209; --ink:#eadfc6; --ink-soft:#b3a184;
     --brass:#d9a35c; --brass-bright:#e2b273; --sage:#93b289; --rule:#4a3d29;
-    --glass:rgba(24,18,10,.80); --glass-soft:rgba(24,18,10,.62);
+    --glass:rgba(22,17,9,.93); --glass-soft:rgba(22,17,9,.86);
   }
 }
 *{box-sizing:border-box;margin:0}
@@ -24,10 +24,10 @@ body{color:var(--ink);font-family:var(--serif);line-height:1.6;background:var(--
 .bg img.on{opacity:1}
 .bg-veil{position:fixed;inset:0;z-index:-1;
   background:
-    radial-gradient(ellipse at 50% 30%, transparent 0%, color-mix(in srgb,var(--parchment) 34%,transparent) 70%),
-    linear-gradient(180deg, color-mix(in srgb,var(--parchment) 22%,transparent) 0%,
-      color-mix(in srgb,var(--parchment) 30%,transparent) 60%,
-      color-mix(in srgb,var(--parchment) 78%,transparent) 100%)}
+    radial-gradient(ellipse at 50% 30%, transparent 0%, color-mix(in srgb,var(--parchment) 10%,transparent) 70%),
+    linear-gradient(180deg, color-mix(in srgb,var(--parchment) 6%,transparent) 0%,
+      color-mix(in srgb,var(--parchment) 10%,transparent) 60%,
+      color-mix(in srgb,var(--parchment) 45%,transparent) 100%)}
 
 .wrap{max-width:920px;margin:0 auto;padding:0 22px}
 
