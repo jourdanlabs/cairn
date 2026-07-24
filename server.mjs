@@ -200,6 +200,10 @@ function answerReceipt({ q, r, ans }) {
     tool: 'cairn',
     kind: 'answer',
     verdict: refused ? 'REFUSED_UNGROUNDED' : 'GROUNDED',
+    // The mode that ACTUALLY answered this query (search() reports per-query truth —
+    // a hybrid instance can silently degrade a single query to lexical on an embed
+    // hiccup, and the receipt must say so; the global /api/status can't). Pan's note.
+    search_mode: r.mode || null,
     question: q,
     answer: ans?.answer ?? null,
     model: ans?.model ?? null,
