@@ -3,7 +3,7 @@
 :root{
   --parchment:#171209; --ink:#eadfc6; --ink-soft:#b3a184;
   --brass:#d9a35c; --brass-bright:#e2b273; --sage:#93b289; --rule:#4a3d29;
-  --glass:rgba(20,15,8,.74); --glass-soft:rgba(20,15,8,.62);
+  --glass:rgba(22,17,9,.93); --glass-soft:rgba(22,17,9,.86);
   --mono:"SF Mono",ui-monospace,Menlo,monospace;
   --serif:"Hoefler Text","Iowan Old Style",Georgia,serif;
 }
@@ -121,6 +121,7 @@ details.raw pre{font-family:var(--mono);font-size:.64rem;color:var(--ink-soft);o
 .begin{font-size:.92rem;padding:13px 26px;margin-top:22px}
 .rail{position:sticky;top:14px;z-index:5;display:flex;gap:6px 22px;flex-wrap:wrap;align-items:center;
   padding:12px 20px;margin:18px 0 0;list-style:none}
+.rail[hidden]{display:none}  /* display:flex outranks the UA [hidden] rule — say it out loud */
 .rail li{font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);opacity:.55}
 .rail li.now{color:var(--brass-bright);opacity:1}
 .rail li.done{color:var(--sage);opacity:1}

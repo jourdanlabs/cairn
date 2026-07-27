@@ -183,7 +183,13 @@
       } catch (e) {
         btn.textContent = was;
         btn.disabled = false;
-        out.appendChild(el('div', 'confline bad', 'The box did not answer from this page — it may be waking, or you may be on a preview URL not on the CORS allow-list. The curls at the end always work.'));
+        // Name the actual origin: the usual cause is a deploy-preview URL that the
+        // box's CORS allow-list does not carry, and a vague message costs an hour.
+        var here = location.origin;
+        var onCanon = /^https:\/\/(www\.)?cairnsemantics\.com$/.test(here);
+        out.appendChild(el('div', 'confline bad', onCanon
+          ? 'The box did not answer — it may still be waking (scale-to-zero, a few seconds). Run it again. The curls at the end always work.'
+          : 'The box did not answer: this page is served from ' + here + ', which is not on the box\'s CORS allow-list — the live beats only run from cairnsemantics.com. Open https://www.cairnsemantics.com' + location.pathname + ' and the acts perform. The curls at the end work from anywhere.'));
       }
     });
   });

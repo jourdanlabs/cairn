@@ -53,7 +53,16 @@ const EXTS = (process.env.INDEX_EXT || '.md,.markdown').split(',').map((s) => s.
 const CONTROLLED_DIRS = (process.env.CONTROLLED_DIRS || '').split(',').map((s) => s.trim()).filter(Boolean);
 const WATCH = (process.env.WATCH || 'on').toLowerCase() !== 'off';
 // Browser origins allowed to call this box cross-origin. Empty = no CORS (default).
-const CORS_ORIGINS = new Set((process.env.CAIRN_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean));
+// An entry may carry `*` standing for exactly one host label — deploy-preview
+// hostnames rotate every push, and naming them one at a time means a demo that
+// silently dies on the URL you just deployed. `*` never crosses a dot or slash,
+// so https://site-*-team.vercel.app admits that project's previews and nothing
+// else; a bare `*`, or any entry not anchored to a scheme + host, is dropped.
+const CORS_LIST = (process.env.CAIRN_CORS_ORIGINS || '').split(',').map((s) => s.trim()).filter(Boolean);
+const CORS_ORIGINS = new Set(CORS_LIST.filter((s) => !s.includes('*')));
+const CORS_PATTERNS = CORS_LIST.filter((s) => s.includes('*') && /^https?:\/\/[^*/]/.test(s))
+  .map((s) => new RegExp('^' + s.split('*').map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[^./]*') + '$'));
+const corsAllows = (origin) => CORS_ORIGINS.has(origin) || CORS_PATTERNS.some((re) => re.test(origin));
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml',
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp', '.avif': 'image/avif', '.gif': 'image/gif', '.json': 'application/json' };
 
@@ -241,12 +250,12 @@ const server = createServer(async (req, res) => {
     const reqPath = req.url.split('?')[0];
 
     // CORS — OFF unless origins are explicitly allow-listed (CAIRN_CORS_ORIGINS,
-    // comma-separated; never a wildcard). Lets a trusted site — the cairnsemantics
-    // demo rooms — run the beats live in the visitor's browser against this box.
-    // Preflights are answered before the auth gate (they carry no credentials by
-    // spec); actual requests still pass the gate like any other.
+    // comma-separated; never a bare wildcard). Lets a trusted site — the
+    // cairnsemantics demo rooms — run the beats live in the visitor's browser
+    // against this box. Preflights are answered before the auth gate (they carry
+    // no credentials by spec); actual requests still pass the gate like any other.
     const origin = req.headers.origin;
-    if (origin && CORS_ORIGINS.has(origin)) {
+    if (origin && corsAllows(origin)) {
       res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Vary', 'Origin');
       if (req.method === 'OPTIONS') {
