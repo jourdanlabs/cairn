@@ -1,7 +1,7 @@
 # CAIRN Data Edition — live public instance. The AtScale-conversation URL: the synthetic
 # Brightpath corpus where ARR is defined three ways and only one is governed. Ships its
 # sealed ledger (ARR + NRR metric cards, receipts verifiable live at /api/ledger/verify).
-# Refusal is structural; passages carry provenance. No synthesis model on this box.
+# Refusal is structural. Synthesis (Fireworks US) is cite-or-refuse only.
 # The pitch: the semantic layer is the law; CAIRN audits everything that cites the law.
 app = "cairn-data"
 primary_region = "ord"
@@ -20,6 +20,8 @@ primary_region = "ord"
   CAIRN_STATE_SEED = "/app/deploy/fly-data/state"
   EMBEDDINGS = "cache"
   WATCH = "off"
+  MODEL_BASE_URL = "https://api.fireworks.ai/inference/v1"
+  MODEL_NAME = "accounts/fireworks/models/kimi-k2p7-code"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
 
 [[mounts]]

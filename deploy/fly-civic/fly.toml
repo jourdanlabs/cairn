@@ -1,8 +1,7 @@
 # CAIRN Civic Edition — live public instance. Town of Alder Creek (synthetic): the
 # clerk's nightmare — adopted law says ninety days, the published code still says one
-# hundred twenty. Ships its sealed ledger (ordinance + official cards). No model aboard:
-# the fabricated "Ordinance 2026-11" refuses by arithmetic, on the record — the exact
-# answer the NYC MyCity chatbot could not give.
+# hundred twenty. Ships its sealed ledger (ordinance + official cards). Refusal of the
+# fabricated "Ordinance 2026-11" is arithmetic. Synthesis (Fireworks US) is cite-or-refuse.
 app = "cairn-civic"
 primary_region = "ord"
 
@@ -20,6 +19,8 @@ primary_region = "ord"
   CAIRN_STATE_SEED = "/app/deploy/fly-civic/state"
   EMBEDDINGS = "cache"
   WATCH = "off"
+  MODEL_BASE_URL = "https://api.fireworks.ai/inference/v1"
+  MODEL_NAME = "accounts/fireworks/models/kimi-k2p7-code"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
 
 [[mounts]]
