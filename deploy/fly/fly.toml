@@ -3,11 +3,12 @@
 # Copperline matter with the law profile, pre-sealed held-knowledge cards, and the
 # shipped receipt ledger — /api/ledger/verify recomputes the chain live.
 #
-# No model on the box, deliberately: refusal is STRUCTURAL (the confidence gate), search
-# returns grounded passages with pin cites, and nothing here can run up an API bill.
-# Prose answers light up when an operator runs the same repo locally with Ollama.
+# Refusal is STRUCTURAL (the confidence gate) and model-free. A small hosted model
+# is wired for the synthesis step only, so a hit returns a grounded answer with [n]
+# citations. MODEL_API_KEY is a Fly secret, never this file. Public surface is
+# read-only (CAIRN_PUBLIC_READONLY) — visitors cannot mutate prefs or consolidate.
 app = "cairn-law"
-primary_region = "ord"
+primary_region = "dfw"
 
 [build]
   dockerfile = "../../Dockerfile"
@@ -16,13 +17,25 @@ primary_region = "ord"
   HOST = "0.0.0.0"          # public demo box — synthetic data only, nothing sensitive
   PORT = "4600"
   CAIRN_PROFILE = "law"
+  CAIRN_PUBLIC_READONLY = "1"
   # Fly machines silently scrub VAULT_* env vars (reserved for HashiCorp Vault
   # integration) — the namespaced form survives.
   CAIRN_VAULT_DIR = "/app/demo/matter-sample"
-  CAIRN_STATE_DIR = "/app/deploy/fly/state"   # ships the sealed ledger + cards receipts
+  CAIRN_STATE_DIR = "/data"                   # Fly volume — ledger survives redeploy
+  CAIRN_STATE_SEED = "/app/deploy/fly/state"  # baked cards receipts, copied on first boot
   EMBEDDINGS = "cache"
   WATCH = "off"
+  # Synthesis only. Refusal still short-circuits before this endpoint is called.
+  # Hosted: Fireworks US (preferred) is currently suspended; OpenAI quota is empty.
+  # DeepSeek is the working cite-following endpoint we could actually wire today.
+  # Only retrieved snippets of a synthetic corpus leave the box. MODEL_API_KEY is a Fly secret.
+  MODEL_BASE_URL = "https://api.deepseek.com/v1"
+  MODEL_NAME = "deepseek-chat"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
+
+[[mounts]]
+  source = "cairn_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 4600

@@ -5,7 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildIndex } from '../lib/index.mjs';
-import { integrityReport } from '../lib/integrity.mjs';
+import { integrityReport, RAW_ARCHIVE_NOTE } from '../lib/integrity.mjs';
 import { mkVault, rmVault, ageFile } from './helpers.mjs';
 
 const CLEAN = {
@@ -84,4 +84,35 @@ test('a defective corpus scores lower than a clean one; penalties add up', async
     const sum = Object.values(bad.penalties).reduce((s, x) => s + x, 0);
     assert.equal(bad.integrity_score, Math.max(0, 100 - sum));
   } finally { rmVault(cleanDir); rmVault(badDir); }
+});
+
+test('a curated corpus (front-matter, even if tag-less) is not labeled raw archive', async () => {
+  const dir = mkVault({
+    'docs/one.md': `---\ntitle: One\nauthority: controlled\n---\n\n# One\n\nA well formed note with plenty of words that links onward to [[Two]] cleanly here.\n`,
+    'docs/two.md': `---\ntitle: Two\n---\n\n# Two\n\nA well formed note with plenty of words that links onward to [[One]] cleanly here.\n`,
+  });
+  try {
+    const index = await buildIndex(dir, { exts: ['.md'] });
+    const rep = await integrityReport(index);
+    assert.equal(rep.raw_archive, false);
+    assert.equal(rep.archive_note, undefined);
+  } finally { rmVault(dir); }
+});
+
+test('a raw archive (untagged + no front-matter schema) self-labels and suppresses orphan penalties', async () => {
+  const files = {};
+  for (let i = 0; i < 10; i++) {
+    files[`dump-${i}.md`] = `# Dump ${i}\n\nA loose personal note with plenty of words and no yaml schema sitting here alone.\n`;
+  }
+  const dir = mkVault(files);
+  try {
+    const index = await buildIndex(dir, { exts: ['.md'] });
+    const rep = await integrityReport(index);
+    assert.equal(rep.raw_archive, true);
+    assert.equal(rep.archive_note, RAW_ARCHIVE_NOTE);
+    assert.equal(rep.penalties.orphans, 0);
+    // The note is the first framing field the caller sees.
+    const keys = Object.keys(rep);
+    assert.ok(keys.indexOf('archive_note') < keys.indexOf('integrity_score'));
+  } finally { rmVault(dir); }
 });

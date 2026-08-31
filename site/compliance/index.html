@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAIRN — compliance mapping. Cited to code.</title>
+<meta name="description" content="What CAIRN actually provides versus what your environment provides. The seal binds seq, prev_hash, kind, and payload. It does not bind wall-clock time.">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="stylesheet" href="../canon.css">
+</head>
+<body>
+
+<div class="bg-veil" aria-hidden="true"></div>
+
+<main class="page">
+  <div class="wrap">
+
+    <div class="glass panel">
+      <a class="back" href="/">← Cairn Semantics</a>
+      <span class="eyebrow" style="margin-top:18px">Compliance · cited to code</span>
+      <h1>A control you operate</h1>
+      <p class="lede">CAIRN is not SOC 2 / ISO / HIPAA certified — certification is a property of
+      the operated system. CAIRN sits inside a certified environment and generates the
+      evidence those audits ask for. This page claims nothing the code does not do.
+      Source of record: <a href="https://github.com/jourdanlabs/cairn/blob/main/docs/COMPLIANCE.md">docs/COMPLIANCE.md</a>.</p>
+    </div>
+
+    <div class="glass panel" style="margin-top:18px">
+      <span class="eyebrow">§3a · the seal</span>
+      <h2>What the seal binds</h2>
+      <p class="lede"><code>sha256(seq | prev_hash | kind | canonicalJSON(payload))</code></p>
+      <p class="lede"><b>Binds</b> position, linkage, kind, and canonical payload. Tamper any of
+      those and <code>/api/ledger/verify</code> fails at <code>broken_at</code>.</p>
+      <p class="lede"><b>Does not bind</b> wall-clock <code>ts</code>. Order and content are the
+      proof; time is a separate problem. An auditor should recompute the chain, not trust
+      the clock. If you need time, put it in the payload — that field is hashed.</p>
+      <p class="lede">Code: <code>core/ledger.mjs</code> · tests: <code>test/ledger.test.mjs</code>.
+      Walked through in the <a href="/receipt">receipt room</a>.</p>
+    </div>
+
+    <div class="glass panel" style="margin-top:18px">
+      <span class="eyebrow">Cite or refuse</span>
+      <h2>Two paths, both sealed</h2>
+      <p class="lede">Refusal is arithmetic: a confidence gate fires <i>before</i> any model is
+      called. A model is used only to synthesize an answer the retrieved passages already
+      hold, and every factual sentence must end with a <code>[n]</code> citation. Hits with
+      the model off still seal a <code>passages_returned</code> receipt — retrieval, not
+      synthesis. Every answer path produces a verifiable ledger entry.</p>
+    </div>
+
+    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · <a href="https://github.com/jourdanlabs/cairn/blob/main/docs/COMPLIANCE.md">full mapping on GitHub</a></footer>
+  </div>
+</main>
+</body>
+</html>

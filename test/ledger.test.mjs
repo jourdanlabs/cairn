@@ -87,6 +87,21 @@ test('canonicalJSON is order-invariant (equal hashes for reordered keys)', () =>
   assert.notEqual(canonicalJSON([1, 2]), canonicalJSON([2, 1]));
 });
 
+test('ts is outside the seal — rewriting wall-clock time does not break the chain', () => {
+  const { path, now } = fixture();
+  const led = new Ledger(path, { now });
+  led.append('passages_returned', { query_hash: 'ab', hit_count: 1 });
+  led.append('answer_receipt', { q: 'x' });
+
+  const lines = readFileSync(path, 'utf8').split('\n').filter((l) => l.trim());
+  const e = JSON.parse(lines[0]);
+  e.ts = '1999-01-01T00:00:00.000Z';
+  lines[0] = JSON.stringify(e);
+  writeFileSync(path, lines.join('\n') + '\n');
+
+  assert.equal(led.verify().ok, true, 'clock rewrite is not tamper');
+});
+
 test('recordAnswerReceipt / recordReportReceipt seal with correct kinds', () => {
   const { path, now } = fixture();
   const led = new Ledger(path, { now });

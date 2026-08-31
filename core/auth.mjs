@@ -23,11 +23,13 @@ export function permissionFor(method, path) {
   if (path === '/api/integrity') return 'integrity';
   if (path === '/api/contradictions') return 'adjudicate';
   if (path === '/api/audit') return 'audit';
-  if (path === '/api/ledger/verify') return 'audit';
+  if (path === '/api/ledger' || path === '/api/ledger/verify') return 'audit';
   if (path === '/api/access-log') return 'audit';
   if (path === '/api/compliance/export') return 'audit';
   if (path === '/api/surveillance') return 'surveillance';
   if (path === '/api/reindex') return 'reindex';
+  if (path === '/api/consolidate') return 'manage';
+  if (path === '/api/cards') return 'report_read';
   if (path.startsWith('/api/connectors')) return 'connectors';
   if (path === '/api/status') return 'report_read';
   if (path === '/api/obsidian-vaults') return 'report_read';

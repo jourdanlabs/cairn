@@ -826,7 +826,9 @@ $('#integritybtn').onclick = async () => {
       ? `<details class="finding"${c.candidate_count?' open':''}><summary><span><span class="f-label">Contradiction candidates</span><span class="f-hint">Same-topic pairs — not yet confirmed; use Overlaps to classify${co?` · <span style="color:var(--warn);font-weight:700">${co} between controlled docs — review first</span>`:''}</span></span><span class="count ${c.candidate_count?'some':'zero'}">${c.candidate_count}</span></summary>${c.candidate_count?`<div class="items">${c.candidates.slice(0,20).map(p=>p.both_controlled?`<a style="color:var(--warn);font-weight:700">⚑ controlled · ~${p.similarity} · ${esc(p.a.note)} ↔ ${esc(p.b.note)}</a>`:`<a class="muted">~${p.similarity} · ${esc(p.a.note)} ↔ ${esc(p.b.note)}</a>`).join('')}</div>`:''}</details>`
       : `<div class="finding" style="padding:12px 18px"><span class="f-hint">${esc(c.note)}</span></div>`;
     const cc = d.controlled_coverage || {controlled:0,total:d.totals.notes};
-    out.innerHTML = `<div class="card"><div class="audit-head">
+    const archiveNote = d.raw_archive && d.archive_note
+      ? `<div class="muted" style="padding:10px 20px 0;font:500 12.5px var(--sans)">${esc(d.archive_note)}</div>` : '';
+    out.innerHTML = `<div class="card">${archiveNote}<div class="audit-head">
         <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><span class="badge">Knowledge Integrity Report</span>
           <span style="font:700 34px/1 var(--serif);color:${col}">${d.integrity_score}<span style="font-size:15px;color:var(--muted)">/100</span></span>
           <span class="rel" style="color:${col};border:1px solid ${col}">Grade ${esc(d.grade)}</span>

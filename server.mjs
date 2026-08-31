@@ -5,7 +5,7 @@
 import { createServer } from 'node:http';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { readFileSync, existsSync, watch, mkdirSync, writeFileSync, readdirSync, appendFileSync } from 'node:fs';
+import { readFileSync, existsSync, watch, mkdirSync, writeFileSync, readdirSync, appendFileSync, copyFileSync, cpSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { homedir } from 'node:os';
 import { dirname, join, extname, normalize, basename } from 'node:path';
@@ -72,6 +72,31 @@ let INDEX = null;
 // receipt ledger, and a surveillance state file. Open unless CAIRN_API_KEYS is set.
 const AUTH = makeAuth();
 const STATE_DIR = process.env.CAIRN_STATE_DIR || join(__dir, '.cairn');
+// Public demo boxes: visitors may ask/search/verify, never mutate prefs/corpus/config.
+const PUBLIC_READONLY = /^(1|true|yes|on)$/i.test(String(process.env.CAIRN_PUBLIC_READONLY || ''));
+const MUTATING_WRITES = new Set([
+  'POST /api/preferences',
+  'POST /api/consolidate',
+  'POST /api/art/upload',
+  'POST /api/connectors/ingest',
+  'POST /api/reindex',
+  'POST /api/surveillance',
+]);
+// First boot onto an empty Fly volume: copy the baked seed ledger + embed cache so
+// the demo receipts and contradiction vectors survive, then persist visitor seals.
+function seedState() {
+  const seed = process.env.CAIRN_STATE_SEED;
+  if (!seed || seed === STATE_DIR || !existsSync(seed)) return;
+  mkdirSync(STATE_DIR, { recursive: true });
+  const destLedger = join(STATE_DIR, 'ledger.jsonl');
+  const srcLedger = join(seed, 'ledger.jsonl');
+  const destEmpty = !existsSync(destLedger) || !readFileSync(destLedger, 'utf8').trim();
+  if (destEmpty && existsSync(srcLedger)) copyFileSync(srcLedger, destLedger);
+  const srcCache = join(seed, 'embed-cache');
+  const destCache = join(STATE_DIR, 'embed-cache');
+  if (existsSync(srcCache) && !existsSync(destCache)) cpSync(srcCache, destCache, { recursive: true });
+}
+seedState();
 const LEDGER = new Ledger(join(STATE_DIR, 'ledger.jsonl'));
 const STATE_PATH = join(STATE_DIR, 'surveillance.json');
 
@@ -266,6 +291,12 @@ const server = createServer(async (req, res) => {
       }
     }
 
+    // Public-demo lock: the investor-facing boxes stay readable (ask/search/verify)
+    // and refuse every config/corpus write with 405. Local/studio is unaffected.
+    if (PUBLIC_READONLY && MUTATING_WRITES.has(`${req.method} ${reqPath}`)) {
+      return send(res, 405, { error: 'public demo is read-only', method: req.method, path: reqPath });
+    }
+
     // AuthZ gate — every known API route needs a permission; open mode passes all.
     const perm = permissionFor(req.method, reqPath);
     if (perm) {
@@ -348,6 +379,7 @@ const server = createServer(async (req, res) => {
         ledger: LEDGER.count(),
         profile: { name: profile().name, label: profile().label, terms: profile().terms, kinds: Object.keys(profile().cardKinds || {}) },
         strictness: effStrictness(),
+        public_readonly: PUBLIC_READONLY,
       });
     }
 
@@ -371,8 +403,23 @@ const server = createServer(async (req, res) => {
         const led = LEDGER.append('answer_receipt', receipt);
         return send(res, 200, { q, mode: 'refused', refused: true, reason: 'Nothing in your vault matched that with enough confidence.', hits: r.hits, confidence: r.confidence, receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       }
+      // Hits, no synthesis: still a sealed receipt. Kind `passages_returned` claims
+      // retrieval only — never an answer. Every answer path (refuse / passages /
+      // grounded) now produces a verifiable ledger entry.
+      const sealPassages = () => {
+        const payload = {
+          query_hash: sha256(String(q)),
+          hit_count: r.hits.length,
+          chunk_ids: r.hits.map((h) => h.id),
+          search_mode: r.mode || 'lexical',
+          strictness: effStrictness(),
+        };
+        const led = LEDGER.append('passages_returned', payload);
+        return { payload, led };
+      };
       if (!modelEnabled()) {
-        return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, weak: r.weak });
+        const { payload, led } = sealPassages();
+        return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, weak: r.weak, receipt: { kind: 'passages_returned', ...payload }, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       }
       try {
         // Rerank: the model re-scores retrieved passages for answer-bearing-ness before
@@ -387,7 +434,8 @@ const server = createServer(async (req, res) => {
         const led = LEDGER.append('answer_receipt', receipt);
         return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, reranked: rr.reranked, confidence: r.confidence, receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       } catch (e) {
-        return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e) });
+        const { payload, led } = sealPassages();
+        return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e), receipt: { kind: 'passages_returned', ...payload }, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       }
     }
 
@@ -496,6 +544,12 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'GET' && reqPath === '/api/ledger/verify') {
       return send(res, 200, { ...LEDGER.verify(), path: '.cairn/ledger.jsonl' });
+    }
+
+    // Full sealed chain (the receipt room). Public demos are allowed to read it.
+    if (req.method === 'GET' && reqPath === '/api/ledger') {
+      const v = LEDGER.verify();
+      return send(res, 200, { ...v, entries: LEDGER.all() });
     }
 
     // Access log: the who-did-what request trail (most recent first).

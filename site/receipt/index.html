@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CAIRN — the receipt room. What the seal binds.</title>
+<meta name="description" content="The hash-chained receipt ledger: what it binds, the one field it deliberately does not, and what an auditor should independently check.">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="stylesheet" href="../canon.css">
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"><img src="../heroes/law.jpg" alt="" class="on"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+
+<main class="page">
+  <div class="wrap">
+
+    <div class="glass panel">
+      <a class="back" href="/">← Cairn Semantics</a>
+      <span class="eyebrow" style="margin-top:18px">Receipt room · the seal</span>
+      <h1>What the seal binds</h1>
+      <p class="lede">Every CAIRN output — a refusal, retrieved passages, a grounded answer with
+      <code>[n]</code> citations, a held-knowledge card, an integrity report — is an entry in
+      an append-only hash chain. Recompute the chain and you know whether the record was
+      altered after the fact. That is the whole claim. It is also the whole proof.</p>
+    </div>
+
+    <div class="glass panel" style="margin-top:18px">
+      <span class="eyebrow">Binds</span>
+      <h2>Order, kind, content, linkage</h2>
+      <p class="lede">The entry hash is <code>sha256(seq | prev_hash | kind | canonicalJSON(payload))</code>.
+      Tamper the sequence, the prior-hash link, the kind, or the payload, and
+      <code>GET /api/ledger/verify</code> returns <code>ok: false</code> with
+      <code>broken_at</code> set to the first broken line.</p>
+      <div class="quick glass-soft" style="text-align:left;margin-top:16px">
+<span class="c"># recompute the chain on the live law box</span><br>
+curl -s https://law.cairnsemantics.com/api/ledger/verify<br>
+<span class="c"># → { "ok": true, "count": N, "broken_at": null }</span>
+      </div>
+    </div>
+
+    <div class="glass panel" style="margin-top:18px">
+      <span class="eyebrow">Deliberately does not bind</span>
+      <h2>Wall-clock time</h2>
+      <p class="lede">The human-readable <code>ts</code> field is <i>outside</i> the hash. A receipt
+      proves order and content, not <i>when</i>. Wall-clock trust is a separate problem (NTP, a
+      timestamping authority). Folding <code>ts</code> into the hash would make two honest
+      machines with skewed clocks produce irreproducible seals — and would still not prove
+      the clock was honest. If you need time, record it <i>inside the payload</i>. That field
+      is hashed.</p>
+    </div>
+
+    <div class="glass panel" style="margin-top:18px">
+      <span class="eyebrow">What an auditor should check</span>
+      <h2>The chain, not the clock</h2>
+      <p class="lede">Recompute. Do not treat <code>ts</code> as evidence. The live boxes keep the
+      ledger on a volume so a receipt you just sealed is still there after a redeploy. The
+      refusal path is arithmetic — a model is never asked to fill a gap. Synthesis, when it
+      runs, is locked to retrieved passages and every sentence cites <code>[n]</code>.</p>
+      <p class="lede"><a href="/compliance">Full control mapping →</a></p>
+    </div>
+
+    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · <a href="https://github.com/jourdanlabs/cairn/blob/main/docs/COMPLIANCE.md">COMPLIANCE.md on GitHub</a></footer>
+  </div>
+</main>
+</body>
+</html>

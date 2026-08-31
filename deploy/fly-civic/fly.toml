@@ -13,12 +13,18 @@ primary_region = "ord"
   HOST = "0.0.0.0"          # public demo box — synthetic data only
   PORT = "4600"
   CAIRN_PROFILE = "civic"
+  CAIRN_PUBLIC_READONLY = "1"
   CAIRN_VAULT_DIR = "/app/demo/town-sample"   # VAULT_* is scrubbed by Fly machines
   CONTROLLED_DIRS = "adopted"
-  CAIRN_STATE_DIR = "/app/deploy/fly-civic/state"
+  CAIRN_STATE_DIR = "/data"
+  CAIRN_STATE_SEED = "/app/deploy/fly-civic/state"
   EMBEDDINGS = "cache"
   WATCH = "off"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
+
+[[mounts]]
+  source = "cairn_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 4600

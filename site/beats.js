@@ -98,6 +98,27 @@
       out.appendChild(row); reveal(row, i + 1);
     });
   }
+  function renderAnswer(out, data) {
+    var stamp = el('div', 'stamp grounded', 'GROUNDED');
+    out.appendChild(stamp);
+    if (data.answer) {
+      var body = el('div', 'abody', data.answer);
+      out.appendChild(body); reveal(body, 0);
+    }
+    var cites = data.citations || [];
+    if (cites.length) {
+      var row = el('div', 'cites');
+      cites.forEach(function (c) {
+        row.appendChild(el('span', 'cite', '[' + (c.n || '') + '] ' + (c.note || '') + (c.heading ? ' · ' + c.heading : '')));
+      });
+      out.appendChild(row);
+    }
+    if (data.ledger) {
+      var seal = el('div', 'seal-live', 'sealed · ledger #' + data.ledger.seq + ' · ' + String(data.ledger.entry_hash || '').slice(0, 20) + '…');
+      out.appendChild(seal);
+    }
+    renderHits(out, data);
+  }
   function renderRefusal(out, data, base, actNum) {
     var stamp = el('div', 'stamp', 'REFUSED');
     out.appendChild(stamp);
@@ -172,8 +193,16 @@
           if (data.refused) {
             renderRefusal(out, data, base, actNum); // act completes on chain-verify
             rawToggle(out, data);
+          } else if (data.mode === 'answer' && data.answer) {
+            renderAnswer(out, data);
+            rawToggle(out, data);
+            if (actNum) completeAct(actNum);
           } else {
             renderHits(out, data);
+            if (data.ledger) {
+              var seal = el('div', 'seal-live', 'sealed · ledger #' + data.ledger.seq + ' · ' + String(data.ledger.entry_hash || '').slice(0, 20) + '…');
+              out.appendChild(seal);
+            }
             rawToggle(out, data);
             if (actNum) completeAct(actNum);
           }

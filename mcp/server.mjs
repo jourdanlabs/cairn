@@ -119,6 +119,7 @@ const TOOLS = [
       const r = await api('POST', '/api/integrity', { adjudicate: Boolean(adjudicate) });
       const c = r.contradictions || {};
       return {
+        ...(r.raw_archive ? { archive_note: r.archive_note, raw_archive: true } : { raw_archive: false }),
         integrity_score: r.integrity_score, grade: r.grade, report_sha256: r.report_sha256,
         findings: r.findings?.map((f) => ({ key: f.key, count: f.count })),
         contradictions: {

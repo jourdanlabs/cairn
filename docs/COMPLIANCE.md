@@ -48,19 +48,44 @@ environment and generate the evidence those audits ask for.
   automatically once keys or a verifier are configured.
 
 ### 3. Audit trail & evidence integrity
-- **Hash-chained receipt ledger.** Every answer and every integrity report is
+- **Hash-chained receipt ledger.** Every answer path (refusal, retrieved passages,
+  grounded synthesis), every integrity report, and every held-knowledge card is
   sealed into an append-only JSONL where each entry binds the prior entry's hash.
   Any edit to a hashed field of any past entry — the sequence, prior-hash link, or
-  payload — is detectable, as is deleting or reordering a line. One field is
-  deliberately outside the hash: the human-readable `ts` timestamp (so a fixed
-  clock isn't required for reproducible hashes), so a change to `ts` alone is the
-  one edit the chain does not flag. — `core/ledger.mjs`, `test/ledger.test.mjs`
+  payload — is detectable, as is deleting or reordering a line. — `core/ledger.mjs`,
+  `test/ledger.test.mjs`
   - *Single-writer assumption:* the chain is correct for one writer. Two processes
     appending to the same ledger file concurrently can fork it — run one writer per
     ledger, or a ledger per instance.
 - **Verification endpoint** recomputes the whole chain: `GET /api/ledger/verify`.
 - **Evidence export** bundles the current integrity posture + the full sealed
   chain + its verification for an auditor: `GET /api/compliance/export`.
+
+### 3a. What the seal binds (and what it deliberately does not)
+
+The entry hash is:
+
+```
+sha256( seq | prev_hash | kind | canonicalJSON(payload) )
+```
+
+**Binds:** position in the chain (`seq`), linkage to the prior seal (`prev_hash`),
+the entry kind (`answer_receipt` / `passages_returned` / `integrity_report` / …),
+and the canonical payload (sorted keys, no undefined). Tamper any of those and
+`GET /api/ledger/verify` returns `ok: false` with `broken_at` set to the first
+broken sequence number.
+
+**Does not bind:** the wall-clock `ts` field. That is deliberate. A receipt is a
+proof of *order and content*, not a proof of *when*. Wall-clock trust is a
+separate problem (NTP, a timestamping authority, a signed TSA token). Folding
+`ts` into the hash would make two honest machines with skewed clocks produce
+irreproducible seals, and would still not prove the clock was honest.
+
+**What an auditor should check:** recompute the chain. Do not treat `ts` as
+evidence. If you need time, bring your own clocking discipline and record it
+*inside the payload* of the thing you are sealing — that field *is* hashed.
+
+See `core/ledger.mjs` (`entryHash`) and `test/ledger.test.mjs`.
 
 ### 4. AI output traceability (model-risk hygiene)
 - **Cite-or-refuse.** The confidence gate refuses to answer when the corpus does

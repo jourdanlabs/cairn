@@ -59,6 +59,9 @@ test('OIDC-ready: custom verifyBearer supplies the principal', async () => {
 test('permissionFor maps routes; deny-by-default', () => {
   assert.equal(permissionFor('POST', '/api/integrity'), 'integrity');
   assert.equal(permissionFor('POST', '/api/reindex'), 'reindex');
+  assert.equal(permissionFor('POST', '/api/consolidate'), 'manage');
+  assert.equal(permissionFor('GET', '/api/ledger'), 'audit');
+  assert.equal(permissionFor('GET', '/api/cards'), 'report_read');
   assert.equal(permissionFor('GET', '/api/unknown'), null);
   assert.ok(PERMISSIONS.reindex === 'admin');
 });

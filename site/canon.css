@@ -104,6 +104,11 @@ footer a:hover{text-decoration:underline}
 .stamp{font-family:var(--mono);font-weight:700;font-size:1.5rem;letter-spacing:.3em;color:#c98a6a;
   border:3px double #c98a6a;border-radius:4px;display:inline-block;padding:8px 20px 8px 24px;
   transform:rotate(-3deg);margin:6px 0 2px;animation:stampin .35s ease}
+.stamp.grounded{color:var(--sage);border-color:var(--sage)}
+.abody{font-size:.98rem;color:var(--ink);margin:8px 0;text-wrap:pretty;white-space:pre-wrap}
+.cites{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.cite{font-family:var(--mono);font-size:.68rem;color:var(--brass-bright);
+  border:1px solid color-mix(in srgb,var(--brass) 50%,transparent);border-radius:3px;padding:3px 8px}
 @keyframes stampin{0%{transform:rotate(-3deg) scale(1.6);opacity:0}100%{transform:rotate(-3deg) scale(1);opacity:1}}
 .seal-live{font-family:var(--mono);font-size:.74rem;color:var(--brass-bright);
   border:1px dashed var(--brass);border-radius:3px;display:inline-block;padding:6px 12px}

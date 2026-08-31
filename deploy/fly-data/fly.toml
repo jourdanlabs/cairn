@@ -1,9 +1,8 @@
 # CAIRN Data Edition — live public instance. The AtScale-conversation URL: the synthetic
 # Brightpath corpus where ARR is defined three ways and only one is governed. Ships its
 # sealed ledger (ARR + NRR metric cards, receipts verifiable live at /api/ledger/verify).
-# No model on the box: refusal is structural, passages carry provenance, nothing can run
-# up a bill. The pitch: the semantic layer is the law; CAIRN audits everything that cites
-# the law.
+# Refusal is structural; passages carry provenance. No synthesis model on this box.
+# The pitch: the semantic layer is the law; CAIRN audits everything that cites the law.
 app = "cairn-data"
 primary_region = "ord"
 
@@ -14,12 +13,18 @@ primary_region = "ord"
   HOST = "0.0.0.0"          # public demo box — synthetic data only
   PORT = "4600"
   CAIRN_PROFILE = "data"
+  CAIRN_PUBLIC_READONLY = "1"
   CAIRN_VAULT_DIR = "/app/demo/metrics-sample"   # VAULT_* is scrubbed by Fly machines
   CONTROLLED_DIRS = "governed"
-  CAIRN_STATE_DIR = "/app/deploy/fly-data/state"
+  CAIRN_STATE_DIR = "/data"
+  CAIRN_STATE_SEED = "/app/deploy/fly-data/state"
   EMBEDDINGS = "cache"
   WATCH = "off"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
+
+[[mounts]]
+  source = "cairn_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 4600
