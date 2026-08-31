@@ -26,11 +26,10 @@ primary_region = "dfw"
   EMBEDDINGS = "cache"
   WATCH = "off"
   # Synthesis only. Refusal still short-circuits before this endpoint is called.
-  # Hosted: Fireworks US (preferred) is currently suspended; OpenAI quota is empty.
-  # DeepSeek is the working cite-following endpoint we could actually wire today.
-  # Only retrieved snippets of a synthetic corpus leave the box. MODEL_API_KEY is a Fly secret.
-  MODEL_BASE_URL = "https://api.deepseek.com/v1"
-  MODEL_NAME = "deepseek-chat"
+  # Fireworks US (Kimi K2.7 Code). MODEL_API_KEY is a Fly secret. Only retrieved
+  # snippets of a synthetic corpus leave the box.
+  MODEL_BASE_URL = "https://api.fireworks.ai/inference/v1"
+  MODEL_NAME = "accounts/fireworks/models/kimi-k2p7-code"
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
 
 [[mounts]]
