@@ -16,7 +16,7 @@
   "build": {
     "appId": "com.jourdanlabs.cairn",
     "productName": "CAIRN Studio",
-    "files": ["main.js", "preload.js"],
+    "files": ["main.js", "preload.js", "supervise.js"],
     "extraResources": [
       { "from": "../", "to": "cairn-core", "filter": ["server.mjs", "package.json", ".env.example", "README.md", "LICENSE", "lib/**/*", "core/**/*", "connectors/**/*", "public/**/*"] }
     ],

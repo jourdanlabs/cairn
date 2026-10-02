@@ -19,6 +19,7 @@ import { consolidateEntity, slugify } from './lib/consolidate.mjs';
 import { rerankHits } from './lib/rerank.mjs';
 import { getProfile, kindGuidance } from './lib/profiles.mjs';
 import { embedIndex, embedQuery, semanticScores } from './lib/embed.mjs';
+import { createRunner } from './lib/reindex.mjs';
 import { similarPairs, adjudicatePairs } from './lib/contradict.mjs';
 import { integrityReport } from './lib/integrity.mjs';
 import { makeAuth, permissionFor, auditRecord } from './core/auth.mjs';
@@ -254,20 +255,25 @@ function answerReceipt({ q, r, ans }) {
 }
 
 // Debounced auto-reindex when the vault changes (the embedding cache makes only
-// new/changed chunks re-embed, so this is cheap).
+// new/changed chunks re-embed, so this is cheap). Single-flight: a schedule
+// landing mid-pass queues exactly one follow-up instead of stacking a second
+// build+embed on top of the first, and the superseded pass is told to stop.
+const reindexRunner = createRunner(async (shouldAbort) => {
+  const idx = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
+  if (shouldAbort()) return; // a newer write already queued; skip the stale build
+  // Swap FIRST so edits are searchable (lexically) at once; embed behind. Waiting on
+  // the embed to swap makes every vault edit invisible for the length of the pass.
+  INDEX = idx;
+  console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks`);
+  if (embeddingsEnabled()) {
+    const r = await embedIndex(idx, () => {}, shouldAbort);
+    if (INDEX === idx && !r.aborted) console.log('↻ embeddings caught up — hybrid live');
+  }
+}, (e) => console.error('reindex failed:', e.message || e));
 let reindexTimer = null;
 function scheduleReindex() {
   clearTimeout(reindexTimer);
-  reindexTimer = setTimeout(async () => {
-    try {
-      const idx = await buildIndex(VAULT_DIR, { exts: effExts(), controlledDirs: CONTROLLED_DIRS });
-      // Swap FIRST so edits are searchable (lexically) at once; embed behind. Waiting on
-      // the embed to swap makes every vault edit invisible for the length of the pass.
-      INDEX = idx;
-      console.log(`↻ reindexed: ${INDEX.notes.length} notes · ${INDEX.N} chunks`);
-      if (embeddingsEnabled()) embedIndex(idx).then(() => { if (INDEX === idx) console.log('↻ embeddings caught up — hybrid live'); }).catch(() => {});
-    } catch (e) { console.error('reindex failed:', e.message); }
-  }, 1500);
+  reindexTimer = setTimeout(() => reindexRunner.schedule(), 1500);
 }
 
 const server = createServer(async (req, res) => {

@@ -5,6 +5,7 @@
 // lives ONLY here in desktop/ — the CAIRN core stays zero-dependency.
 const { app, BrowserWindow, Menu, dialog, shell, ipcMain } = require("electron");
 const { spawn } = require("node:child_process");
+const { createSupervisor } = require("./supervise");
 const { readFileSync, writeFileSync, existsSync, mkdirSync } = require("node:fs");
 const path = require("node:path");
 const os = require("node:os");
@@ -31,7 +32,6 @@ function writeConfig(patch) {
 }
 
 let win;
-let server;
 let MODEL_ENV = {}; // auto-detected local model config (Ollama), passed to the server
 
 // If a local Ollama is running, wire its models into the server so Ask + semantic
@@ -59,24 +59,32 @@ async function detectLocalModel() {
   } catch { return {}; }
 }
 
+// The engine supervisor: a crashed server relaunches with backoff (1s, 2s, 4s…
+// capped at 30s) instead of staying dead until someone relaunches Studio.
+// Intentional stops (vault switch, window close, app quit) never relaunch.
+const supervisor = createSupervisor({
+  spawn: (vault) => {
+    // Run the server with Electron's OWN Node (ELECTRON_RUN_AS_NODE) so no system `node`
+    // is required — truly self-contained. State goes to a writable userData dir (the
+    // bundled core in Resources is read-only). HOST stays loopback.
+    const env = {
+      ...process.env,
+      ELECTRON_RUN_AS_NODE: "1",
+      PORT: String(port), HOST: "127.0.0.1",
+      CAIRN_STATE_DIR: path.join(app.getPath("userData"), "state"),
+      ...MODEL_ENV, // local Ollama, if detected
+    };
+    if (vault) env.VAULT_DIR = vault;          // explicit choice overrides .env
+    else delete env.VAULT_DIR;                  // no choice → let server.mjs read its .env
+    return spawn(process.execPath, [path.join(root, "server.mjs")], { cwd: root, stdio: "inherit", env });
+  },
+  onEvent: (m) => console.error(`[cairn] ${m}`),
+});
 function startServer(vault) {
   if (process.env.CAIRN_SKIP_SERVER) return;
-  // Run the server with Electron's OWN Node (ELECTRON_RUN_AS_NODE) so no system `node`
-  // is required — truly self-contained. State goes to a writable userData dir (the
-  // bundled core in Resources is read-only). HOST stays loopback.
-  const env = {
-    ...process.env,
-    ELECTRON_RUN_AS_NODE: "1",
-    PORT: String(port), HOST: "127.0.0.1",
-    CAIRN_STATE_DIR: path.join(app.getPath("userData"), "state"),
-    ...MODEL_ENV, // local Ollama, if detected
-  };
-  if (vault) env.VAULT_DIR = vault;          // explicit choice overrides .env
-  else delete env.VAULT_DIR;                  // no choice → let server.mjs read its .env
-  server = spawn(process.execPath, [path.join(root, "server.mjs")], { cwd: root, stdio: "inherit", env });
-  server.on("error", (e) => console.error(`[cairn] server error: ${e.message}`));
+  supervisor.start(vault ?? null);
 }
-function stopServer() { if (server) { try { server.kill("SIGINT"); } catch {} server = null; } }
+function stopServer() { supervisor.stop(); }
 
 async function waitForHealth(timeoutMs = 25000) {
   const start = Date.now();
@@ -96,9 +104,7 @@ async function useVault(vault) {
   if (win) win.webContents.executeJavaScript(
     `document.getElementById('status') && (document.getElementById('status').textContent='indexing '+${JSON.stringify(path.basename(vault))}+'…')`
   ).catch(() => {});
-  stopServer();
-  await new Promise((r) => setTimeout(r, 400));
-  startServer(vault);
+  if (!process.env.CAIRN_SKIP_SERVER) supervisor.restart(vault); // sequenced: the old child exits before the new one binds
   await waitForHealth();
   if (win) win.loadURL(url);
 }
