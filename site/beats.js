@@ -194,16 +194,10 @@
             renderRefusal(out, data, base, actNum); // act completes on chain-verify
             rawToggle(out, data);
           } else if (data.mode === 'answer' && data.answer) {
-            document.body.setAttribute('data-answer', 'answer');
             renderAnswer(out, data);
             rawToggle(out, data);
             if (actNum) completeAct(actNum);
           } else {
-            // No written answer came back (model down or not configured). Say so, and let
-            // every placard, seal and finale switch to copy that matches this state.
-            document.body.setAttribute('data-answer', 'passages');
-            var down = el('div', 'confline bad', 'The written answer is unavailable right now. These are the retrieved passages, sealed. Nothing was written for you.');
-            out.appendChild(down); reveal(down, 0);
             renderHits(out, data);
             if (data.ledger) {
               var seal = el('div', 'seal-live', 'sealed · ledger #' + data.ledger.seq + ' · ' + String(data.ledger.entry_hash || '').slice(0, 20) + '…');
