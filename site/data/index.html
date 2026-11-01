@@ -62,10 +62,11 @@
       <h2>The loaded question</h2>
       <div class="placard"><div class="p-label">Placard</div><p>The governed definition excludes usage overages. The wiki's drifted copy
       includes them. Ask the question your CFO and your analysts would answer differently —
-      and watch a grounded answer return <i>both</i> positions with <code>[n]</code> citations,
-      refusing to quietly pick a side.</p></div>
+      <span data-when="answer">and watch a grounded answer return <i>both</i> positions with <code>[n]</code> citations,
+      refusing to quietly pick a side.</span><span data-when="passages">the written answer is unavailable right now, so
+      the box returned the retrieved passages instead, sealed, without picking a side.</span></p></div>
       <div class="beat" data-beat="ask" data-q="Does ARR include usage overages?" style="margin-top:16px">
-        <div class="seal">governed/metric-arr ↔ wiki/finance-faq · both sides, cited</div>
+        <div class="seal">governed/metric-arr ↔ wiki/finance-faq · <span data-when="answer">both sides, cited</span><span data-when="passages">passages only, sealed</span></div>
         <button class="beat-run" style="margin-top:12px">Ask the loaded question — live →</button>
         <div class="beat-out"></div>
       </div>
@@ -100,7 +101,7 @@
     <section class="act glass doors-panel" hidden>
       <span class="eyebrow">The doors</span>
       <h2>The room is yours</h2>
-      <p class="lede" style="max-width:560px;margin:14px auto 0">Three definitions surfaced, both sides of a loaded question cited, the drift
+      <p class="lede" style="max-width:560px;margin:14px auto 0">Three definitions surfaced, <span data-when="answer">both sides of a loaded question cited</span><span data-when="passages">the loaded question returned sealed passages</span>, the drift
       caught live, and a refusal you caused and then verified. The full map room is open.</p>
       <div style="margin-top:8px"><a class="cta" href="https://data.cairnsemantics.com">Open the live map room →</a></div>
       <div class="eyebrow" style="margin-top:14px">synthetic corpus · Brightpath Software · no signup</div>
@@ -113,7 +114,7 @@ curl -s https://data.cairnsemantics.com/api/ledger/verify
       </div>
     </section>
 
-    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration corpus is entirely fictional</footer>
+    <footer>A Forseti Research product · the demonstration corpus is entirely fictional</footer>
   </div>
 </main>
 

@@ -20,8 +20,9 @@ primary_region = "ord"
   CAIRN_STATE_SEED = "/app/deploy/fly-energy/state"
   EMBEDDINGS = "cache"
   WATCH = "off"
-  MODEL_BASE_URL = "https://api.fireworks.ai/inference/v1"
-  MODEL_NAME = "accounts/fireworks/models/kimi-k2p7-code"
+  MODEL_BASE_URL = "https://api.openai.com/v1"
+  MODEL_NAME = "gpt-6.1-terra"
+  MODEL_TEMPERATURE = "default"   # gpt-6.1-terra rejects temperature 0
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
 
 [[mounts]]

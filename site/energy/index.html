@@ -61,11 +61,13 @@
       <span class="eyebrow">Act II — the unit speaks</span>
       <h2>The unit speaks</h2>
       <div class="placard"><div class="p-label">Placard</div><p>The SOP says thirty minutes. The approved MOC says fifteen. Ask the document
-      set what the purge time is — and watch a grounded answer come back with <code>[n]</code>
-      citations to both documents, the conflict visible instead of averaged away. This is the
+      set what the purge time is<span data-when="answer"> — and watch a grounded answer come back with <code>[n]</code>
+      citations to both documents, the conflict visible instead of averaged away.</span><span data-when="passages">. The
+      written answer is unavailable right now, so the box returned the retrieved passages instead,
+      sealed. Nothing was averaged and nothing was invented.</span> This is the
       question a crew asks at 2 AM.</p></div>
       <div class="beat" data-beat="ask" data-q="What is the nitrogen purge time for Unit 300?" style="margin-top:16px">
-        <div class="seal">sop-300-12 ↔ moc-2026-018 · both answers, cited</div>
+        <div class="seal">sop-300-12 ↔ moc-2026-018 · <span data-when="answer">both answers, cited</span><span data-when="passages">passages only, sealed</span></div>
         <button class="beat-run" style="margin-top:12px">Ask the document set — live →</button>
         <div class="beat-out"></div>
       </div>
@@ -100,7 +102,7 @@
     <section class="act glass doors-panel" hidden>
       <span class="eyebrow">The doors</span>
       <h2>The room is yours</h2>
-      <p class="lede" style="max-width:560px;margin:14px auto 0">The OPEN follow-up surfaced verbatim, both purge times came back cited, two
+      <p class="lede" style="max-width:560px;margin:14px auto 0">The OPEN follow-up surfaced verbatim, <span data-when="answer">both purge times came back cited</span><span data-when="passages">the purge question came back as sealed passages</span>, two
       controlled documents found each other live, and the invented clause was refused —
       sealed, verified, by you. The full control room is open.</p>
       <div style="margin-top:8px"><a class="cta" href="https://energy.cairnsemantics.com">Open the live control room →</a></div>
@@ -114,7 +116,7 @@ curl -s https://energy.cairnsemantics.com/api/ledger/verify
       </div>
     </section>
 
-    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration unit is entirely fictional</footer>
+    <footer>A Forseti Research product · the demonstration unit is entirely fictional</footer>
   </div>
 </main>
 

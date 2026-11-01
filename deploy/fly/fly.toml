@@ -26,10 +26,11 @@ primary_region = "dfw"
   EMBEDDINGS = "cache"
   WATCH = "off"
   # Synthesis only. Refusal still short-circuits before this endpoint is called.
-  # Fireworks US (Kimi K2.7 Code). MODEL_API_KEY is a Fly secret. Only retrieved
+  # OpenAI gpt-6.1-terra. MODEL_API_KEY is a Fly secret. Only retrieved
   # snippets of a synthetic corpus leave the box.
-  MODEL_BASE_URL = "https://api.fireworks.ai/inference/v1"
-  MODEL_NAME = "accounts/fireworks/models/kimi-k2p7-code"
+  MODEL_BASE_URL = "https://api.openai.com/v1"
+  MODEL_NAME = "gpt-6.1-terra"
+  MODEL_TEMPERATURE = "default"   # gpt-6.1-terra rejects temperature 0
   CAIRN_CORS_ORIGINS = "https://cairnsemantics.com,https://www.cairnsemantics.com,https://cairnsemantics-*-lelandsequel-0aae5153.vercel.app,http://localhost:*"
 
 [[mounts]]

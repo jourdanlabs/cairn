@@ -140,3 +140,7 @@ details.raw pre{font-family:var(--mono);font-size:.64rem;color:var(--ink-soft);o
 .doors-panel h2{font-size:1.4rem;letter-spacing:.08em}
 .doors-panel .cta{font-size:.95rem;padding:15px 30px;margin-top:18px}
 @media (prefers-reduced-motion: reduce){.act.enter{animation:none}}
+
+/* Copy that depends on what Act II actually returned: beats.js sets body[data-answer]. */
+body[data-answer="passages"] [data-when="answer"],
+body:not([data-answer="passages"]) [data-when="passages"] { display: none; }
