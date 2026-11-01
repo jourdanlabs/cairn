@@ -4,10 +4,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { chat } from '../lib/model.mjs';
 
+let lastRaw;
 async function sentBody(temperatureEnv) {
   const saved = { fetch: globalThis.fetch, t: process.env.MODEL_TEMPERATURE, b: process.env.MODEL_BASE_URL, k: process.env.MODEL_API_KEY };
   let body;
   globalThis.fetch = async (_url, init) => {
+    lastRaw = init.body;
     body = JSON.parse(init.body);
     return { ok: true, json: async () => ({ choices: [{ message: { content: ' OK ' } }] }) };
   };
@@ -27,6 +29,8 @@ async function sentBody(temperatureEnv) {
 
 test('unset MODEL_TEMPERATURE sends temperature 0, exactly as before', async () => {
   assert.deepEqual(await sentBody(undefined), { model: 'm', messages: [{ role: 'user', content: 'hi' }], stream: false, temperature: 0 });
+  // The exact bytes the old literal produced: { model, messages, temperature: 0, stream: false }.
+  assert.equal(lastRaw, JSON.stringify({ model: 'm', messages: [{ role: 'user', content: 'hi' }], temperature: 0, stream: false }));
 });
 
 test('MODEL_TEMPERATURE=default omits the field entirely', async () => {
