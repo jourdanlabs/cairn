@@ -62,8 +62,11 @@
       <h2>The record speaks</h2>
       <div class="placard"><div class="p-label">Placard</div><p>The adopted ordinance cut the short-term-rental cap to ninety days. The
       published Chapter 5 still says one hundred twenty — codification lag, the clerk's quiet
-      nightmare. Ask the record what the cap is, and watch a grounded answer come back
-      with <code>[n]</code> citations — both numbers, attributed, never averaged.</p></div>
+      nightmare. Ask the record what the cap is<span data-when="answer">, and watch a grounded answer come back
+      cited <code>[n]</code> to the record, never averaged. Whether it also quotes the stale
+      Chapter 5 depends on what it retrieves; Act III catches the lag either way.</span><span data-when="passages">. The
+      written answer is unavailable right now, so the record returned its retrieved passages
+      instead, sealed and never averaged.</span></p></div>
       <div class="beat" data-beat="ask" data-q="What is the short-term rental cap in Alder Creek?" style="margin-top:16px">
         <div class="seal">§ 5-210 · the record carries the conflict</div>
         <button class="beat-run" style="margin-top:12px">Ask the record — live →</button>
@@ -100,7 +103,7 @@
     <section class="act glass doors-panel" hidden>
       <span class="eyebrow">The doors</span>
       <h2>The room is yours</h2>
-      <p class="lede" style="max-width:560px;margin:14px auto 0">The record answered with citations, the codification lag surfaced live, and
+      <p class="lede" style="max-width:560px;margin:14px auto 0"><span data-when="answer">The record answered with citations</span><span data-when="passages">The record returned sealed passages</span>, the codification lag surfaced live, and
       the ordinance that never existed was refused — sealed, verified, by you. The full
       record hall is open.</p>
       <div style="margin-top:8px"><a class="cta" href="https://civic.cairnsemantics.com">Open the live record hall →</a></div>
@@ -114,10 +117,11 @@ curl -s https://civic.cairnsemantics.com/api/ledger/verify
       </div>
     </section>
 
-    <footer>A <a href="https://jourdanlabs.io">JourdanLabs</a> product · the demonstration town is entirely fictional</footer>
+    <footer>A Forseti Research product · the demonstration town is entirely fictional</footer>
   </div>
 </main>
 
 <script src="../beats.js" defer></script>
+<script src="../answer-state.js" defer></script>
 </body>
 </html>
