@@ -68,7 +68,7 @@ One click produces an **Integrity Report**: a 0–100 score and letter grade ove
 - **Document AI (Notion AI, Copilot)** answers fluently and cloud-side. Fluency is not provenance; a good answer from the wrong document is still wrong, and there is no artifact proving where it came from.
 - **RAG plugins** ground answers in retrieved chunks but stop there — no cite-or-refuse discipline, no corpus-level integrity score, no hashed receipt.
 
-Nobody in the field scores the corpus for internal contradiction, and nobody hands you a signed receipt for the answer. That is the open lane.
+Others do pieces of this: grounding, evaluation and verification tools exist, and a few seal or publish their results. CAIRN's bet is all three in one engine that runs on your hardware: cite-or-refuse answers, a corpus-level contradiction score, and a hash-chained receipt for every answer and every refusal.
 
 ## 7. What it is — and is not
 

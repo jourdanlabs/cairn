@@ -73,7 +73,7 @@
 ### Beat 4 — The "so what" (kill shot)
 
 **Say:**
-> "Every firm here has an audit trail for money and an audit trail for trades. Nobody has an audit trail for *knowledge* — for how your people, and now your AI assistants, knew to do what they did. Today, when a regulator asks 'how did you know to do X,' the honest answer is 'someone read a document, we think, some version of it.' CAIRN turns that into a receipt. And it tells you, before the regulator does, where your own policies contradict each other."
+> "Every firm here has an audit trail for money and an audit trail for trades. Most have no audit trail for *knowledge* — for how your people, and now your AI assistants, knew to do what they did. Today, when a regulator asks 'how did you know to do X,' the honest answer is 'someone read a document, we think, some version of it.' CAIRN turns that into a receipt. And it tells you, before the regulator does, where your own policies contradict each other."
 
 ---
 

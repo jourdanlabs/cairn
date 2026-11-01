@@ -11,6 +11,7 @@ const DOCS = [
   { md: "CAIRN-ONE-PAGER-2026-07-22.md", title: "CAIRN — One Page" },
   { md: "CAIRN-BRIEF-2026-07-22.md", title: "CAIRN — Brief" },
   { md: "CAIRN-WHITE-PAPER-2026-07-22.md", title: "CAIRN — White Paper" },
+  { md: "CAIRN-ENERGY-ONE-PAGER-2026-11-01.md", title: "CAIRN — Process-safety documents" },
 ];
 
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
