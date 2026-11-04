@@ -11,6 +11,9 @@
 //
 // What "the current rules" means (see lib/ground.mjs):
 //   - citations are parsed as [1], [1, 4], [1-3], [1–3] … — every form;
+//   - a range is never expanded wider than 64 (the context count a stored
+//     receipt was given is not recorded), so a wider or reversed range names
+//     no note and refuses;
 //   - GROUNDED only when at least one cited number is backed by a source AND
 //     no cited number dangles;
 //   - otherwise REFUSED_CITATION_CHECK.
@@ -21,7 +24,7 @@
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { Ledger } from '../core/ledger.mjs';
-import { parseCitations, countUncitedSentences } from '../lib/ground.mjs';
+import { parseCitationGroups, citedFromGroups, countUncitedSentences, INVALID_CITATION } from '../lib/ground.mjs';
 
 // The citation parse the OLD code used: only "[n]". Kept so the re-scan can
 // tell what the old receipt saw — and therefore what it dropped.
@@ -35,7 +38,11 @@ function parseCitationsOld(text) {
  */
 export function recheckReceipt(receipt) {
   const answer = receipt?.answer ?? '';
-  const cited = parseCitations(answer);
+  // A range is never expanded wider than 64 here (the number of contexts the
+  // old receipt was given is not recorded), so a malformed range in a stored
+  // answer is reported as a citation that names no note — and it refuses.
+  const groups = parseCitationGroups(answer);
+  const cited = citedFromGroups(groups);
   const sources = Array.isArray(receipt?.sources) ? receipt.sources : [];
 
   // Which citation numbers does this receipt actually back with a source?
@@ -66,10 +73,14 @@ export function recheckReceipt(receipt) {
   }
 
   let reason;
+  const danglingText = [
+    ...dangling.filter((n) => n !== INVALID_CITATION).map((n) => `[${n}]`),
+    ...groups.invalid.map((g) => `[${g.text}]`),
+  ];
   if (newVerdict === 'REFUSED_UNGROUNDED') reason = 'the model refused — nothing was claimed';
   else if (!cited.length) reason = 'the answer cites nothing';
-  else if (dangling.length && valid.length) reason = `cites ${dangling.map((n) => `[${n}]`).join(' ')} — no source backs ${dangling.length === 1 ? 'it' : 'them'}`;
-  else if (dangling.length) reason = `cites ${dangling.map((n) => `[${n}]`).join(' ')} and no citation resolves to a source`;
+  else if (danglingText.length && valid.length) reason = `cites ${danglingText.join(' ')} — no source backs ${danglingText.length === 1 ? 'it' : 'them'}`;
+  else if (danglingText.length) reason = `cites ${danglingText.join(' ')} and no citation resolves to a source`;
   else if (!valid.length) reason = 'no citation resolves to a source';
   else reason = 'every citation resolves to a source';
 
@@ -81,6 +92,7 @@ export function recheckReceipt(receipt) {
     cited,
     valid,
     dangling_citations: dangling,
+    invalid_citations: groups.invalid,
     uncited_sentences: Number.isFinite(receipt?.uncited_sentences)
       ? receipt.uncited_sentences
       : countUncitedSentences(answer),
@@ -115,6 +127,7 @@ export function rescanLedger(path, { append = false } = {}) {
         cited: check.cited,
         valid: check.valid,
         dangling_citations: check.dangling_citations,
+        invalid_citations: check.invalid_citations,
         uncited_sentences: check.uncited_sentences,
       });
     }

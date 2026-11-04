@@ -727,8 +727,13 @@ function render(d){
     const citeCheck = !!(d.receipt && d.receipt.verdict === 'REFUSED_CITATION_CHECK');
     const title = citeCheck ? 'Citation check failed' : 'Not in your vault';
     const dangling = (d.receipt && d.receipt.dangling_citations) || [];
-    const danglingLine = citeCheck && dangling.length
-      ? `<p class="muted" style="font-size:12px;margin:6px 0 0">Citation${dangling.length>1?'s':''} that named no note: ${dangling.map(n=>'['+n+']').join(' ')}</p>` : '';
+    // A citation group that names no note is carried as the marker -1. The
+    // receipt names the group itself in invalid_citations, so show that form.
+    const invalid = (d.receipt && d.receipt.invalid_citations) || [];
+    const shown = dangling.filter(n=>n!==-1).map(n=>'['+n+']')
+      .concat(invalid.map(g=>'['+(g.text||'')+']'));
+    const danglingLine = citeCheck && shown.length
+      ? `<p class="muted" style="font-size:12px;margin:6px 0 0">Citation${shown.length>1?'s':''} that named no note: ${shown.join(' ')}</p>` : '';
     out.innerHTML = `<div class="card refused"><div class="r-title">${title}</div>
       <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p>${danglingLine}${receiptBar(d.receipt)}</div>`;
     if(d.hits && d.hits.length) out.innerHTML += `<div class="muted" style="font-size:12px;margin:4px 2px">Closest passages:</div>` + d.hits.slice(0,3).map(h=>hitCard(h,d.qterms)).join('');

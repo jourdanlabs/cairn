@@ -275,6 +275,9 @@ function answerReceipt({ q, r, ans }) {
     // that name nothing, and the sources that back the rest.
     cited,
     dangling_citations: dangling,
+    // The citation groups that name no note: a reversed range, or one wider
+    // than the contexts supplied. They are never expanded, and they dangle.
+    invalid_citations: ans?.invalid_citations || [],
     sources: citations,
     // MEASURED, not enforced: how many sentences of the answer carry no citation.
     uncited_sentences: ans?.uncited_sentences ?? 0,

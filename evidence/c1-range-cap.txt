@@ -1,0 +1,42 @@
+C-1 evidence — the unbounded citation range
+Produced by: node scripts/probe-c1-range-cap.mjs
+Worktree: ~/projects/cairn-fix-receipts (branch fix-receipt-grounding-2026-11-03)
+
+BEFORE the fix (commit a20570d's parent, dcfdbfd):
+  parseCitations("Answer [1-999999999].")  ->  RangeError: Set maximum size exceeded
+                                            after 1348ms, having built a set of
+                                            millions of numbers first.
+  [1-5000000] -> 5,000,000 numbers in 395ms (Pan's gate measurement).
+  The server's catch kept it from being GROUNDED, so it failed closed — but
+  the memory spike could hit a small public box, and a model can be coaxed
+  into writing such a range by a document in the corpus.
+
+AFTER the fix:
+== the parse, with four contexts ==
+Answer [1-999999999].  -> [-1]                           in 0ms
+Answer [3-1].          -> [-1]                           in 0ms
+Answer [1-4].          -> [1,2,3,4]                      in 0ms
+Answer [1-64].         -> [-1]                           in 0ms
+
+== the same, with no context count (the default cap is 64) ==
+Answer [1-999999999].  -> [-1]                           in 0ms
+Answer [1-65].         -> [-1]                           in 0ms
+
+== the server: an answer citing a huge range ==
+mode: refused | refused: true | grounded: false
+answer shown: undefined (not shown)
+reason: The answer didn't pass the citation check.
+receipt.verdict: REFUSED_CITATION_CHECK
+receipt.cited: [-1]
+receipt.dangling_citations: [-1]
+receipt.invalid_citations: [{"text":"1-999999999","lo":1,"hi":999999999,"reason":"too_wide","limit":2}]
+receipt.sources: []
+receipt.answer (kept for audit): "A well must be plugged within 30 days [1-999999999]."
+ledger answer_receipt entries: 1
+chain verify: ok=true
+
+== the re-scan tool: a stored receipt with a huge range ==
+old_verdict: GROUNDED -> new_verdict: REFUSED_CITATION_CHECK
+reason: cites [1-999999999] and no citation resolves to a source
+cited: [-1] | dangling_citations: [-1]
+invalid_citations: [{"text":"1-999999999","lo":1,"hi":999999999,"reason":"too_wide","limit":64}]
