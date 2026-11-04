@@ -20,7 +20,9 @@ import { join } from 'node:path';
 import * as extract from '../lib/extract.mjs';
 import { buildIndex } from '../lib/index.mjs';
 
-const HANG_WORKER = new URL('./fixtures/hang-worker.mjs', import.meta.url);
+// The stub lives in test-fixtures/, NOT under test/: `node --test` collects
+// every .mjs under a test/ directory as a test file, and this file must hang.
+const HANG_WORKER = new URL('../test-fixtures/hang-worker.mjs', import.meta.url);
 
 test('a stub that never returns is killed at the limit', async () => {
   assert.equal(typeof extract.extractTextBounded, 'function', 'lib/extract.mjs must export extractTextBounded');
