@@ -373,3 +373,104 @@ One line of evidence per factor, per
 - I did not run the re-scan against a real ledger — that is Pan's dry run on a copy.
 - I did not change the repo-local git identity, and I did not push anything.
 - **I am not calling this CLEAR or READY. Pan gates it.**
+
+---
+
+# Addendum — C-1, the unbounded citation range
+
+*From Pan's gate of `dcfdbfd` (`~/projects/pan-cc/handoffs/cairn/PAN-GATE-CAIRN-RECEIPT-FIX-dcfdbfd.md`).
+Everything above describes the first phase and is left exactly as it was. This addendum is
+the only change to the report.*
+
+**The finding.** `parseCitations("Answer [1-999999999].")` built the set first and threw
+`RangeError: Set maximum size exceeded` after about **1 348 ms**; `[1-5000000]` produced
+5 000 000 numbers in 395 ms. The server's catch kept it from being GROUNDED — it failed
+closed — but the memory spike could hit a small public box, and a model can be coaxed into
+writing such a range by a document in the corpus.
+
+**The rule now enforced.**
+
+- A range is **never expanded wider than the number of contexts supplied** to the model.
+- With **no context count given**, the widest range that may be expanded is **64**.
+- A range that is **wider, or reversed, names no note at all**: it is not expanded, it is
+  reported as dangling, and the verdict is `REFUSED_CITATION_CHECK`.
+
+**Commits.** Red `a20570d` → green `532d816`. The red commit fails on assertions only —
+all five failures are `ERR_ASSERTION`, with the `RangeError` caught and surfaced as the
+assertion's actual value, never as a thrown error of its own.
+
+| Test | What it pins down |
+|---|---|
+| a range wider than the contexts is not expanded, and the parse stays fast | `[1-999999999]` with 4 contexts: no throw, **under 50 ms**, one marker, nothing expanded |
+| with no context count, a range wider than 64 is not expanded | `[1-64]` still expands to 64 numbers; `[1-65]` names no note |
+| an answer citing a huge range is refused, not sealed | the answer path refuses instead of throwing; nothing validates; no source is claimed |
+| a reversed range is dangling | `[3-1]` names no note and dangles |
+| a range that fits the contexts is still expanded and grounded | `[1-4]` with 4 contexts is still GROUNDED |
+| a wide range is refused by the server and sealed | end to end: `mode: refused`, `REFUSED_CITATION_CHECK`, no source, the text kept in the receipt, the chain verifies |
+
+**The parse of `[1-999999999]` went from 1 348 ms and a `RangeError` to under 1 ms.**
+
+### The choices, which are mine and Pan's to overrule
+
+- **The cap is the number of contexts *supplied*** — `contexts.length` at answer time, which
+  is `min(hits, 6)` (`kctx` defaults to 6). Not the number of notes in the vault, and not
+  the number of citations the model wrote. A corpus of 2 notes supplies 2 contexts, so
+  `[1-3]` there is over-wide and refuses.
+- **The default is 64** when no count is given — that is the re-scan tool's situation, where
+  a stored receipt does not record how many contexts it was given.
+- **A reversed range is not normalised.** The old code silently swapped `[3-1]` into
+  `[1-3]`. Now it names no note and refuses, which is the stricter reading of "a wider or
+  reversed range makes the whole citation dangling".
+- **A group that names no note is carried as the marker `-1`** (`INVALID_CITATION`).
+  Contexts are numbered from 1, so the marker can never collide with a real note, and
+  `valid` + `dangling` still partition `cited` exactly as before.
+- **The receipt names the group itself** in a new `invalid_citations` field, so a reader
+  sees *which* group was malformed and why, not just the marker:
+  `{"text":"1-999999999","lo":1,"hi":999999999,"reason":"too_wide","limit":2}`.
+- **The refusal card shows the malformed range** — `[1-999999999]`, not `[-1]`.
+- **A malformed range still counts as a citation** for the `uncited_sentences` measure,
+  exactly as before the fix (the old parser counted it as cited too). The measure is still
+  measured, not enforced.
+
+### What this changes in the re-scan tool
+
+It re-checks with the same rules, so a stored receipt containing a huge range is reported
+as `REFUSED_CITATION_CHECK` instead of throwing — the tool reads the receipt's answer
+text with the default cap of 64, because a stored receipt does not record its context
+count. Its reason names the range: `cites [1-999999999] and no citation resolves to a
+source`.
+
+### The evidence
+
+- `evidence/c1-range-cap.txt` (sha256 `bc83989c…`) — the transcript of
+  `node scripts/probe-c1-range-cap.mjs`: the parse timings, the server's refusal and
+  receipt, and the re-scan tool's reading of a stored receipt with a huge range.
+- `evidence/suite-TZ-UTC-c1.log` (sha256 `81a1d9fa…`) — **157 / 157 pass**, 0 fail.
+- `evidence/suite-TZ-America-Chicago-c1.log` (sha256 `c934b19c…`) — **157 / 157 pass**, 0 fail.
+
+The first phase's two suite logs keep their own names and their own hashes
+(`6a89b833…`, `26b171da…`), so the table in §2 above stays true as it was written; these
+are the runs at the C-1 commit. 157 = the 151 of the first phase plus the 6 new tests. No
+existing test was changed, deleted, skipped or weakened.
+
+### The gaps this leaves
+
+- **A range that is wider than the contexts is refused whole.** It is not partially
+  expanded and then judged, so an answer whose range merely overshoots the contexts is
+  refused rather than partially accepted. That is the stricter behaviour, and it is a
+  behaviour change for an answer that used to be refused anyway (the overshoot numbers
+  dangled) — but the *reason* in the receipt is now "too wide", not "dangling".
+- **The cap is a function of the contexts supplied**, so it is not a fixed ceiling that
+  could be set independently in configuration. If an operator wants a different ceiling,
+  that is a new decision.
+- **The re-scan's cap is the default 64**, not the context count the original answer was
+  given, because that count is not recorded in a receipt. A stored receipt citing `[1-70]`
+  is therefore read differently than one citing `[1-4]` would have been at answer time.
+- **The marker `-1` is in `cited` and in `dangling_citations`.** A consumer that assumes
+  those numbers are all positive note numbers has to know about it. The MCP tool and the
+  site both pass the values through unchanged.
+- **Factor 9 (Disposability)**, which the gate marked open on range expansion, is closed
+  by this fix. The rest of the Twelve-Factor line above is unchanged.
+
+**I am still not calling this CLEAR or READY. Pan gates it.**
+
