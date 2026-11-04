@@ -1,0 +1,3 @@
+mode: refused | answer: undefined | grounded: false | citations: undefined
+receipt.verdict: REFUSED_CITATION_CHECK | receipt.sources: [] | ledger seq: 0
+receipt.cited: [7] | receipt.dangling_citations: [7] | receipt.uncited_sentences: 0

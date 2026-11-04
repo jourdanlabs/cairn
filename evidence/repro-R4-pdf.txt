@@ -1,0 +1,2 @@
+[old path] elapsed_ms=180006 signal=SIGKILL status=null  
+[new path] elapsed_ms=30003 limit_ms=30000 {"text":"","ok":false,"timed_out":true,"note":"EXTRACT_TIMEOUT after 30000ms (.pdf)"}
