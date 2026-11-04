@@ -80,8 +80,8 @@ Now search or ask across every README and note on disk: *"which project had the 
 
 ## Why not just a RAG plugin?
 
-Plenty of "chat with your vault" plugins exist. CAIRN's difference is the two things they skip: **grounding you can trust** (cite-or-refuse, every claim traceable to a note) and the **audit** (finding the gaps in your own knowledge). And it's yours — local, offline, MIT.
+Plenty of "chat with your vault" plugins exist. CAIRN's difference is the two things they skip: **grounding you can trust** (cite-or-refuse, every claim traceable to a note) and the **audit** (finding the gaps in your own knowledge). And it's yours — local, offline, Apache-2.0.
 
 ## License
 
-MIT © JourdanLabs
+Apache-2.0 © JourdanLabs
