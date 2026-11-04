@@ -721,8 +721,16 @@ function render(d){
   // refusal
   if(d.mode==='refused' || d.refused){
     const reason = d.reason || (d.answer||'').trim();
-    out.innerHTML = `<div class="card refused"><div class="r-title">Not in your vault</div>
-      <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p>${receiptBar(d.receipt)}</div>`;
+    // A failed citation check is a refusal too — the model answered, but its
+    // citations did not check out. The answer text is never shown as an answer;
+    // the receipt keeps it for audit.
+    const citeCheck = !!(d.receipt && d.receipt.verdict === 'REFUSED_CITATION_CHECK');
+    const title = citeCheck ? 'Citation check failed' : 'Not in your vault';
+    const dangling = (d.receipt && d.receipt.dangling_citations) || [];
+    const danglingLine = citeCheck && dangling.length
+      ? `<p class="muted" style="font-size:12px;margin:6px 0 0">Citation${dangling.length>1?'s':''} that named no note: ${dangling.map(n=>'['+n+']').join(' ')}</p>` : '';
+    out.innerHTML = `<div class="card refused"><div class="r-title">${title}</div>
+      <p>${esc(reason||'Nothing matched with enough confidence — CAIRN won\'t guess.')}</p>${danglingLine}${receiptBar(d.receipt)}</div>`;
     if(d.hits && d.hits.length) out.innerHTML += `<div class="muted" style="font-size:12px;margin:4px 2px">Closest passages:</div>` + d.hits.slice(0,3).map(h=>hitCard(h,d.qterms)).join('');
     wireReceipt();
     return;

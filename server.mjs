@@ -224,17 +224,31 @@ const sha256 = (o) => createHash('sha256').update(typeof o === 'string' ? o : JS
 // a record that the system correctly declined rather than guessed.
 function answerReceipt({ q, r, ans }) {
   const refused = !ans || ans.refused;
+  // Every citation the model wrote, the ones that resolve to a context, and the
+  // ones that name nothing. The receipt carries all three — a dropped citation
+  // is how four GROUNDED receipts in the real ledger lost their provenance.
+  const cited = ans?.cited || [];
+  const valid = ans?.valid || [];
+  const dangling = ans?.dangling || [];
   const citations = (ans?.citations || []).map((c) => {
     const hit = r.hits.find((h) => h.note === c.note && h.heading === c.heading) || r.hits.find((h) => h.note === c.note);
     const text = hit ? INDEX.chunks[hit.id]?.text || '' : '';
-    return { note: c.note, heading: c.heading || null, content_sha256: sha256(text), source_mtime: hit?.mtime || null, controlled: Boolean(INDEX?.byRel.get(c.note)?.controlled) };
+    return { n: c.n, note: c.note, heading: c.heading || null, content_sha256: sha256(text), source_mtime: hit?.mtime || null, controlled: Boolean(INDEX?.byRel.get(c.note)?.controlled) };
   });
   // Grounding on a non-controlled (non-authoritative) source is a compliance flag.
   const allControlled = citations.length > 0 && citations.every((c) => c.controlled);
+  // THE VERDICT is computed here, from validated citations — never from the
+  // model's word. GROUNDED requires at least one citation that resolves to a
+  // context AND no citation that doesn't. A model that answers with a citation
+  // to a note it was never given gets REFUSED_CITATION_CHECK, not a seal.
+  let verdict;
+  if (refused) verdict = 'REFUSED_UNGROUNDED';
+  else if (valid.length >= 1 && dangling.length === 0) verdict = 'GROUNDED';
+  else verdict = 'REFUSED_CITATION_CHECK';
   const receipt = {
     tool: 'cairn',
     kind: 'answer',
-    verdict: refused ? 'REFUSED_UNGROUNDED' : 'GROUNDED',
+    verdict,
     // The mode that ACTUALLY answered this query (search() reports per-query truth —
     // a hybrid instance can silently degrade a single query to lexical on an embed
     // hiccup, and the receipt must say so; the global /api/status can't). Pan's note.
@@ -243,7 +257,13 @@ function answerReceipt({ q, r, ans }) {
     answer: ans?.answer ?? null,
     model: ans?.model ?? null,
     confidence: r.confidence,
+    // The citation ledger of this answer: every number the model wrote, the ones
+    // that name nothing, and the sources that back the rest.
+    cited,
+    dangling_citations: dangling,
     sources: citations,
+    // MEASURED, not enforced: how many sentences of the answer carry no citation.
+    uncited_sentences: ans?.uncited_sentences ?? 0,
     all_sources_controlled: allControlled,
     uncontrolled_source_warning: !refused && citations.some((c) => !c.controlled),
     retrieved_considered: r.hits.slice(0, 8).map((h) => ({ note: h.note, heading: h.heading || null, score: h.score })),
@@ -419,6 +439,12 @@ const server = createServer(async (req, res) => {
           chunk_ids: r.hits.map((h) => h.id),
           search_mode: r.mode || 'lexical',
           strictness: effStrictness(),
+          // This receipt claims retrieval only — it vouches for no answer, so it
+          // cites nothing. The citation fields are carried anyway, so every
+          // receipt speaks the same shape.
+          cited: [],
+          dangling_citations: [],
+          sources: [],
         };
         const led = LEDGER.append('passages_returned', payload);
         return { payload, led };
@@ -438,7 +464,20 @@ const server = createServer(async (req, res) => {
         const ans = await groundedAnswer({ q, query: q, contexts });
         const receipt = answerReceipt({ q, r, ans });
         const led = LEDGER.append('answer_receipt', receipt);
-        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, reranked: rr.reranked, confidence: r.confidence, receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
+        // The model answered, but its citations did not check out. The API treats
+        // this as a refusal: the answer text is NOT shown as an answer — it stays
+        // in the receipt for audit, with the citations that failed named.
+        if (receipt.verdict === 'REFUSED_CITATION_CHECK') {
+          return send(res, 200, {
+            q, mode: 'refused', refused: true,
+            reason: "The answer didn't pass the citation check.",
+            citation_check: { cited: receipt.cited, valid: ans.valid || [], dangling: receipt.dangling_citations },
+            grounded: false,
+            hits: r.hits, confidence: r.confidence,
+            receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash },
+          });
+        }
+        return send(res, 200, { q, mode: 'answer', ...ans, hits: r.hits, reranked: rr.reranked, confidence: r.confidence, grounded: receipt.verdict === 'GROUNDED', receipt, ledger: { seq: led.seq, entry_hash: led.entry_hash } });
       } catch (e) {
         const { payload, led } = sealPassages();
         return send(res, 200, { q, mode: 'passages', hits: r.hits, confidence: r.confidence, answer_error: String(e.message || e), receipt: { kind: 'passages_returned', ...payload }, ledger: { seq: led.seq, entry_hash: led.entry_hash } });

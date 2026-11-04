@@ -75,6 +75,10 @@ const TOOLS = [
         mode: r.mode, refused: Boolean(r.refused), confidence: r.confidence,
         answer: r.answer ? trim(r.answer, 2500) : undefined, reason: r.reason,
         citations: slimHits(r.hits), reranked: r.reranked,
+        // A failed citation check is a refusal: the receipt keeps the text, and
+        // names the citations that named no note.
+        receipt_verdict: r.receipt?.verdict,
+        dangling_citations: r.receipt?.dangling_citations,
         receipt_ledger_seq: r.ledger?.seq, receipt_entry_hash: r.ledger?.entry_hash,
       };
     },
