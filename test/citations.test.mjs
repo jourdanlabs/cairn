@@ -43,7 +43,10 @@ test('parseCitations resolves every citation form to individual numbers', () => 
   assert.deepEqual(ground.parseCitations('a [1-3, 7] b'), [1, 2, 3, 7]);
   assert.deepEqual(ground.parseCitations('a [1, 4] and [2-3] b'), [1, 2, 3, 4]);
   assert.deepEqual(ground.parseCitations('no citations here'), []);
-  assert.deepEqual(ground.parseCitations('see [note 1] and [2024]'), [], 'a bracket that is not a citation is not a citation');
+  assert.deepEqual(ground.parseCitations('see [note 1]'), [], 'a bracket that is not a number is not a citation');
+  // A numeric bracket IS a citation syntactically. Whether it resolves to a
+  // context is the receipt's job (a dangling one is reported, never dropped).
+  assert.deepEqual(ground.parseCitations('see [2024]'), [2024]);
 });
 
 test('a grouped citation reaches the sources it names', async () => {
