@@ -218,6 +218,17 @@ async function semFor(q) {
 
 const sha256 = (o) => createHash('sha256').update(typeof o === 'string' ? o : JSON.stringify(o)).digest('hex');
 
+// The instant a ranking is made. A caller may state it — that is how a past
+// ranking is reproduced exactly — otherwise it is now. An unparseable value
+// fails loudly: a silently defaulted timestamp would let a receipt claim a
+// reproducibility it does not have.
+function resolveRankedAt(v) {
+  if (v === undefined || v === null || v === '') return new Date().toISOString();
+  const ms = typeof v === 'number' ? v : Date.parse(String(v));
+  if (!Number.isFinite(ms)) return null;
+  return new Date(ms).toISOString();
+}
+
 // The compliance artifact: a hashed record of an answer (or refusal) that ties it
 // to the exact sources considered, with a content hash of each cited passage so
 // you can prove WHAT the source said at answer time. Refusals are receipted too —
@@ -253,6 +264,9 @@ function answerReceipt({ q, r, ans }) {
     // a hybrid instance can silently degrade a single query to lexical on an embed
     // hiccup, and the receipt must say so; the global /api/status can't). Pan's note.
     search_mode: r.mode || null,
+    // The instant this ranking was made — the receipt can be re-checked later
+    // by re-ranking with the same instant.
+    ranked_at: r.ranked_at || null,
     question: q,
     answer: ans?.answer ?? null,
     model: ans?.model ?? null,
@@ -411,18 +425,22 @@ const server = createServer(async (req, res) => {
 
     if (req.method === 'POST' && req.url === '/api/search') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
-      const { q = '' } = await readBody(req);
+      const { q = '', now } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
+      const rankedAt = resolveRankedAt(now);
+      if (!rankedAt) return send(res, 400, { error: 'now must be an ISO timestamp' });
       const sem = await semFor(q);
-      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness() }) });
+      return send(res, 200, { q, ...search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness(), now: rankedAt }) });
     }
 
     if (req.method === 'POST' && req.url === '/api/answer') {
       if (!INDEX) return send(res, 503, { error: 'index not ready' });
-      const { q = '' } = await readBody(req);
+      const { q = '', now } = await readBody(req);
       if (!String(q).trim()) return send(res, 400, { error: 'query required' });
+      const rankedAt = resolveRankedAt(now);
+      if (!rankedAt) return send(res, 400, { error: 'now must be an ISO timestamp' });
       const sem = await semFor(q);
-      const r = search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness() });
+      const r = search(INDEX, q, { k: 10, semScores: sem, strictness: effStrictness(), now: rankedAt });
       // Nothing to ground on → refuse up front, never call the model to fill a gap.
       if (r.weak || !r.hits.length) {
         const receipt = answerReceipt({ q, r, ans: null });
@@ -439,6 +457,7 @@ const server = createServer(async (req, res) => {
           chunk_ids: r.hits.map((h) => h.id),
           search_mode: r.mode || 'lexical',
           strictness: effStrictness(),
+          ranked_at: r.ranked_at || null,
           // This receipt claims retrieval only — it vouches for no answer, so it
           // cites nothing. The citation fields are carried anyway, so every
           // receipt speaks the same shape.
